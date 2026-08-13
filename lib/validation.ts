@@ -22,11 +22,14 @@ export const contactSchema = z.object({
     .min(6, "Enter a valid mobile number")
     .max(32)
     .regex(/^[0-9+()\s-]+$/, "Enter a valid mobile number"),
+  // nullish, not optional: the published contract types company as `string | null`, so a
+  // client following it sends null. Accepting only undefined made the contract a lie and
+  // rejected a conforming request with a 400.
   company: z
     .string()
     .trim()
     .max(120)
-    .optional()
+    .nullish()
     .transform((v) => (v ? v : null)),
 });
 
