@@ -1,7 +1,6 @@
-import Quiz from "@/components/Quiz";
+import InterviewChat from "@/components/InterviewChat";
 import { BrandFooter, BrandHeader } from "@/components/Brand";
 import { EntryHero } from "@/components/EntryHero";
-import { clientQuestions } from "@/lib/scoring";
 
 /** Generic entry point. No event, no team — direct entrants. Fully static. */
 export const dynamic = "force-static";
@@ -11,7 +10,9 @@ export default function HomePage() {
     <div className="page">
       <BrandHeader />
       <main className="container">
-        <Quiz questions={clientQuestions} intro={<EntryHero />} />
+        {/* The interview is the primary journey; the tap form survives inside it as the
+            in-turn escape hatch and the turn-budget fallback. */}
+        <InterviewChat intro={<EntryHero />} />
       </main>
       <BrandFooter />
     </div>

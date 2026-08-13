@@ -45,6 +45,7 @@ export async function seedDemoData(): Promise<SeedResult> {
     scored: ownerScore,
     eventSlug: DEMO_EVENT_SLUG,
     teamId: null,
+    intakeMode: "tap",
   });
   log.push(`Owner: ${owner.firstName} — ${archetypeTitle(ownerScore.profile)}`);
 
@@ -61,6 +62,7 @@ export async function seedDemoData(): Promise<SeedResult> {
       scored,
       eventSlug: viaTeam ? null : DEMO_EVENT_SLUG,
       teamId: viaTeam ? teamId : null,
+      intakeMode: "tap",
     });
     log.push(`  ${person.firstName} — ${archetypeTitle(scored.profile)}${viaTeam ? " (via invite)" : ""}`);
   }

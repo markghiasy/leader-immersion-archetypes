@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const teamId = teamSlug ? await teamIdBySlug(teamSlug) : null;
     const eventSlug = event && (await knownEventSlugs()).has(event) ? event : null;
 
-    const { resultId } = await createCompletion({ contact, answers, scored, eventSlug, teamId });
+    const { resultId } = await createCompletion({ contact, answers, scored, eventSlug, teamId, intakeMode: "tap" });
     return NextResponse.json({ resultId }, { status: 201 });
   } catch (error) {
     // Never log the payload: it is all PII.

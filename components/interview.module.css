@@ -1,0 +1,290 @@
+/* The chat surface. Every value resolves through a token in theme.css; the handful of
+   raw lengths below are shape values with no token (bubble width, dot size). */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 70dvh;
+  padding-top: var(--space-4);
+}
+
+/* --- progress ---------------------------------------------------------
+   Unlabelled on purpose. The controller picks questions by leverage and may spend a turn
+   confirming rather than asking, so any visible count would be both wrong and dispiriting. */
+
+.progressTrack {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-muted);
+  border: var(--border-width) solid var(--color-border);
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width var(--transition-base);
+}
+
+/* --- thread ----------------------------------------------------------- */
+
+.thread {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+}
+
+.agentRow,
+.personRow {
+  display: flex;
+}
+
+.agentRow {
+  justify-content: flex-start;
+}
+
+.personRow {
+  justify-content: flex-end;
+}
+
+/* Agent and person are told apart by fill and side, never by hue — the theme is
+   monochrome and nothing may depend on colour to be understood. */
+.agentBubble,
+.personBubble {
+  max-width: 85%;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.agentBubble {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-bottom-left-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.personBubble {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border: var(--border-width) solid var(--color-accent);
+  border-bottom-right-radius: var(--radius-sm);
+}
+
+/* --- typing indicator -------------------------------------------------
+   Each turn is a 3-5 second round trip. Without this the app looks broken. */
+
+.typing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border-bottom-left-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  border: var(--border-width) solid var(--color-border);
+}
+
+.dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-muted);
+  animation: pulse 1200ms ease-in-out infinite;
+}
+
+/* Child 1 is the visually hidden "Thinking…" text, so the dots are children 2, 3 and 4. */
+.dot:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.dot:nth-child(4) {
+  animation-delay: 320ms;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* --- composer ---------------------------------------------------------- */
+
+.composer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0 var(--space-4);
+  background: var(--color-bg);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.input {
+  flex: 1;
+  min-height: var(--tap-target);
+  max-height: 30dvh;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font: inherit;
+  color: inherit;
+  resize: vertical;
+}
+
+.input:disabled {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+}
+
+/* --- the tap-out floor -------------------------------------------------
+   Always rendered, on every turn. The four options must never be more than one tap away. */
+
+.tapOut {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tapToggle {
+  align-self: flex-start;
+  min-height: var(--tap-target);
+  padding: var(--space-2) 0;
+  background: none;
+  border: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tapToggle:hover {
+  color: var(--color-text);
+}
+
+.tiles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 45dvh;
+  overflow-y: auto;
+}
+
+.tiles[hidden] {
+  display: none;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--tap-target);
+  padding: var(--space-4);
+  border: var(--border-width-heavy) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.tile:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface-muted);
+}
+
+.tile:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tileKey {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-pill);
+  border: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-muted);
+}
+
+.tileText {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+
+/* --- retry ------------------------------------------------------------- */
+
+.retry {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* --- fallback tap form -------------------------------------------------
+   The turn budget landed here. Deliberately the plain form, styled by quiz.module.css, so
+   what people finish on is the instrument the 499-response baseline was gathered with. */
+
+.fallback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-bottom: var(--space-5);
+}
+
+.fallbackQuestion {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.fallbackLegend {
+  padding: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}

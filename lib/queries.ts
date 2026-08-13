@@ -8,6 +8,7 @@ import { events, responses, teams, type Response } from "./schema";
 import { publicId } from "./ids";
 import type { Contact } from "./validation";
 import type { ScoreResult } from "./scoring";
+import type { IntakeMode } from "./interview/contract";
 
 /* ------------------------------------------------------------------ *
  * Hot-path caches
@@ -74,6 +75,13 @@ export type CreateCompletionInput = {
   scored: ScoreResult;
   eventSlug: string | null;
   teamId: number | null;
+  /**
+   * How the answers were gathered. Required rather than defaulted: the column exists so a
+   * shifted archetype distribution can be attributed to the instrument or to the cohort,
+   * and a silent fallback to 'tap' would destroy exactly that. The 499-response baseline
+   * was gathered on the form.
+   */
+  intakeMode: IntakeMode;
 };
 
 /**
@@ -98,6 +106,7 @@ export async function createCompletion(input: CreateCompletionInput): Promise<{ 
       totals: input.scored.totals,
       profile: input.scored.profile,
       teamId: input.teamId,
+      intakeMode: input.intakeMode,
     });
     await tx.insert(teams).values({ slug: teamSlug, ownerResponseId: resultId });
   });

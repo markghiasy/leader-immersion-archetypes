@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
@@ -17,10 +17,18 @@ export async function createTestDb() {
   const client = new PGlite();
   const db = drizzle(client, { schema });
 
-  const migration = readFileSync(path.join(process.cwd(), "drizzle/0000_init.sql"), "utf8");
-  for (const statement of migration.split("--> statement-breakpoint")) {
-    const trimmed = statement.trim();
-    if (trimmed) await db.execute(sql.raw(trimmed));
+  // Every migration, in order — not just the first. Hardcoding 0000 meant a new migration
+  // was invisible to the tests, which fail on a missing table rather than a wrong one.
+  const dir = path.join(process.cwd(), "drizzle");
+  const migrations = readdirSync(dir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+  for (const file of migrations) {
+    const sqlText = readFileSync(path.join(dir, file), "utf8");
+    for (const statement of sqlText.split("--> statement-breakpoint")) {
+      const trimmed = statement.trim();
+      if (trimmed) await db.execute(sql.raw(trimmed));
+    }
   }
 
   setDbForTesting(db as unknown as Db);
@@ -28,7 +36,7 @@ export async function createTestDb() {
 }
 
 export async function resetTestDb(db: Awaited<ReturnType<typeof createTestDb>>["db"]) {
-  await db.execute(sql.raw("truncate table responses, teams, events restart identity cascade"));
+  await db.execute(sql.raw("truncate table responses, teams, events, interview_drafts restart identity cascade"));
   clearCaches();
   resetRateLimits();
 }

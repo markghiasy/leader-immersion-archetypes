@@ -14,11 +14,12 @@ export function EntryHero({ invitedBy }: { invitedBy?: string | null }) {
       )}
       <h1 className={styles.heroTitle}>Discover your Leader Archetype</h1>
       <p className="muted">
-        Twenty-five quick questions reveal which of the eight leader archetypes you lead from — your natural strengths,
-        and the habits worth watching. Then share it with your team and see how you fit together.
+        A short conversation reveals which of the eight leader archetypes you lead from — your natural strengths, and
+        the habits worth watching. Answer in your own words, or tap an option any time you would rather. Then share it
+        with your team and see how you fit together.
       </p>
       <div className={styles.meta}>
-        <span>About 3 minutes</span>
+        <span>About 15 minutes</span>
         <span>25 questions</span>
         <span>Your scorecard is instant</span>
       </div>

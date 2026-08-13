@@ -127,16 +127,40 @@ event, not during.
 | `/t/[teamSlug]` | dynamic | one indexed lookup for the inviter's name |
 | `/r/[resultId]` | dynamic | two indexed reads |
 | `/admin` | dynamic, Basic Auth | filtered reads |
+| `/api/interview/start` | dynamic, rate-limited | one draft insert |
+| `/api/interview/turn` | dynamic, rate-limited | one draft update per turn; the response row on the last |
+| `/api/submit` | dynamic, rate-limited | the single write — tap form and turn-budget fallback |
 | `/api/health` | dynamic | none — add `?deep=1` to check Postgres too |
 
-The quiz itself holds all state in React. There are **no network calls between starting the
-quiz and submitting it**, and nothing is written until the final answer. An abandoned quiz
-writes nothing; a refresh mid-quiz starts over. That is the deliberate trade that keeps a
-thousand simultaneous takers off the database.
+**The interview is the primary journey.** Instead of tapping through 25 questions, the person
+is asked them one at a time in conversation and answers in their own words. The agent asks
+question N and only ever reads question N out of the reply — mining several answers out of one
+narrative was measured at 60.6% accuracy and is not built. The question text itself is
+verbatim from the frozen schema; the model writes the sentence before it, never the question.
+An answer the extractor is not confident about is never kept — the controller asks a narrowing
+question instead, because one wrong answer in 25 changes the archetype 15.4% of the time.
 
-On submit, one request does everything: validate → score server-side → insert the response
-and create its team inside a single transaction. Either both rows land or neither does, so
-there is no state in which a scorecard exists without its invite link.
+**The tap form is the floor, not a legacy path.** The four options sit one tap away on every
+turn, so anyone who would rather not type simply taps and moves on, and if the turn budget runs
+out the remaining questions are handed to the form to finish. In a room, that floor is the
+difference between a slow completion and a lost one. Every response records which instrument
+produced it — `tap`, `interview` or `interview_fallback` — because otherwise there is no way to
+tell a shifted archetype distribution caused by the new instrument from one caused by the
+cohort.
+
+Budget the time honestly: the tap form takes about 3 minutes, a typed interview 16–20.
+
+The entry pages still make no database call, so a QR rush is as cheap as it ever was — the
+first request happens when someone starts, not when they scan. From there the interview does
+call the server each turn, and persists a draft as it goes: a 16–20 minute conversation cannot
+live in React state the way a 3-minute form can, and losing it to a locked phone would be
+losing the whole session. Drafts are a separate, disposable tier and are swept after 48 hours.
+The tap form is unchanged and still holds everything in React until submit.
+
+The canonical write happens **once**, at the end, whichever instrument got there: validate →
+score server-side → insert the response and create its team inside a single transaction. Either
+both rows land or neither does, so there is no state in which a scorecard exists without its
+invite link. An abandoned quiz still produces no response row.
 
 Attribution is one hop only. A teammate joining via your link appears on your roster and
 gets their own fresh invite link; their invitees form a new tree, not a downline.
@@ -183,49 +207,75 @@ also the standing proof that the app is not coupled to any one Postgres host.
 
 Run through this before an event, on a phone, against the deployed URL.
 
-**Event journey**
+Allow more time than you used to: typing your way through is a 16–20 minute exercise. Tap
+your way through instead (step 6) when you only want to re-check the end of the journey.
 
-1. Scan the QR / open `/q/<event-slug>` → hero, "About 3 minutes", Start button.
+**Event journey — the interview**
+
+1. Scan the QR / open `/q/<event-slug>` → hero and Start button, and it renders instantly with
+   the network throttled: the entry page still makes no request of its own.
 2. Start → contact form. Submit it empty → inline errors on first name, last name, email,
    mobile. Company is optional.
-3. Fill it in → question 1 of 25.
-4. Tap an option → it highlights and auto-advances. Tap **Back** → the previous question is
-   still selected and editable.
-5. Tab to the options and use arrow keys → selection moves without skipping ahead; **Next**
-   advances. Focus ring is visible throughout.
-6. Answer all 25 → "Calculating your archetype…" → lands on `/r/{id}`.
-7. Scorecard shows: number + name, essence, description, 4 strengths (green), 4 watch-outs
-   (amber), invite link, QR, empty roster, email section, closing CTA.
-8. Copy the scorecard URL, open it in a private window → identical page. Reload → still there.
+3. Fill it in → the agent's opening turn, ending in question 1 **word for word** as it appears
+   in `inputs/archetype-schema.json`. The four options are visible under it, and the progress
+   bar carries no "N of 25" label.
+4. Answer in your own words, in a full sentence → the reply acknowledges what you said and asks
+   question 2 verbatim. Nothing you did not say is attributed to you.
+5. Answer the next one vaguely, or with something that could be two of the options → the agent
+   asks a narrowing question rather than guessing. Answer it clearly → it moves on.
+6. Tap one of the four options instead of typing → it is taken as your answer immediately, and
+   the agent moves to the next question. This is the escape hatch; it must work on every turn.
+7. Send an empty reply, and something off-topic → neither is accepted as an answer and neither
+   loses your place.
+8. Lock the phone mid-interview, or reload the tab → the conversation is still there, with
+   every answer so far.
+9. Keep going to the end → "Calculating your archetype…" → lands on `/r/{id}`.
+10. Scorecard shows: number + name, essence, description, 4 strengths (green), 4 watch-outs
+    (amber), invite link, QR, empty roster, email section, closing CTA.
+11. Copy the scorecard URL, open it in a private window → identical page. Reload → still there.
+12. In `/admin`, that response's source records it as an interview, not a tap.
+
+**The tap form — escape hatch and floor**
+
+13. Start a fresh interview and answer every turn with something unusable ("dunno") until the
+    turn budget runs out → it does **not** dead-end. The remaining questions appear as the tap
+    form, and finishing them lands on a normal scorecard, recorded as the fallback source.
+14. On the tap form: tap an option → it highlights and auto-advances. Tap **Back** → the
+    previous question is still selected and editable.
+15. Tab to the options and use arrow keys → selection moves without skipping ahead; **Next**
+    advances. Focus ring is visible throughout, in the chat and on the form.
+16. Turn the network off mid-interview and send a reply → a plain "we could not save that"
+    message and a retry that works, not a lost conversation.
 
 **Team journey (the loop)**
 
-9. On the scorecard, tap **Copy link** → "Link copied." On iOS/Android, **Share** opens the
-   native sheet.
-10. Open the invite link on a second phone → "**{first name} invited you**" above the hero.
-11. Complete the quiz there → that person gets their own scorecard, with the quiet line
+17. On the scorecard, tap **Copy link** → "Link copied." On iOS/Android, **Share** opens the
+    native sheet.
+18. Open the invite link on a second phone → "**{first name} invited you**" above the hero.
+19. Complete the quiz there → that person gets their own scorecard, with the quiet line
     "You joined {first name}'s team." and their **own** invite link (different from the first).
-12. Reload the first person's scorecard → the teammate appears by name and archetype, with
+20. Reload the first person's scorecard → the teammate appears by name and archetype, with
     the mix summary line. No email or phone number anywhere on the roster.
-13. Scan the QR on the scorecard with a third phone → same invite landing page.
-14. Open `/t/aaaaaaaaaaaaaa` (a bogus slug) → friendly note, quiz still works, no attribution.
-15. Open `/r/nonsense` → the "could not find that scorecard" page, not an error.
+21. Scan the QR on the scorecard with a third phone → same invite landing page.
+22. Open `/t/aaaaaaaaaaaaaa` (a bogus slug) → friendly note, the interview still starts, no
+    attribution.
+23. Open `/r/nonsense` → the "could not find that scorecard" page, not an error.
 
 **Email** (only if `RESEND_API_KEY` is set)
 
-16. On a scorecard, the email field is pre-filled with the address given at capture. Send →
+24. On a scorecard, the email field is pre-filled with the address given at capture. Send →
     "Sent." The email reproduces archetype, description, strengths, watch-outs, and its button
     opens the same scorecard.
-17. Send four times in an hour → the fourth is refused with a friendly message.
+25. Send four times in an hour → the fourth is refused with a friendly message.
 
 **Admin**
 
-18. Open `/admin` → browser prompts for credentials. Wrong password → prompt again.
-19. Correct credentials → responses table with name, email, mobile, company, archetype,
+26. Open `/admin` → browser prompts for credentials. Wrong password → prompt again.
+27. Correct credentials → responses table with name, email, mobile, company, archetype,
     source, invited-by, timestamp; archetype distribution above it; teams table below.
-20. Filter by event, archetype and source → counts and rows both update.
-21. **Export CSV** → downloads the current filter with all contact fields and attribution.
-22. Open `/admin/export` in a private window → 401, not a CSV.
+28. Filter by event, archetype and source → counts and rows both update.
+29. **Export CSV** → downloads the current filter with all contact fields and attribution.
+30. Open `/admin/export` in a private window → 401, not a CSV.
 
 ## Hosting
 

@@ -1,7 +1,6 @@
-import Quiz from "@/components/Quiz";
+import InterviewChat from "@/components/InterviewChat";
 import { BrandFooter, BrandHeader } from "@/components/Brand";
 import { EntryHero } from "@/components/EntryHero";
-import { clientQuestions } from "@/lib/scoring";
 import { teamOwnerBySlug } from "@/lib/queries";
 import { publicIdSchema } from "@/lib/validation";
 
@@ -29,8 +28,9 @@ export default async function TeamInvitePage({ params }: { params: Promise<{ tea
             and get your own scorecard.
           </p>
         )}
-        <Quiz
-          questions={clientQuestions}
+        {/* The interview is the primary journey; the tap form survives inside it as the
+            in-turn escape hatch and the turn-budget fallback. */}
+        <InterviewChat
           teamSlug={team ? team.teamSlug : null}
           intro={<EntryHero invitedBy={team?.ownerFirstName} />}
         />
