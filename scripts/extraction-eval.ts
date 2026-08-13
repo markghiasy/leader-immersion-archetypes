@@ -115,15 +115,24 @@ async function main() {
   console.log(`Extraction evaluation — ${COUNT} personas, model ${DEFAULT_EXTRACTOR_CONFIG.model}`);
   console.log("Narratives are model-generated: treat these numbers as an UPPER BOUND.\n");
 
+  // Concurrent: every persona is an independent pair of API calls, so wall-clock is
+  // latency-bound rather than compute-bound. Batched to stay clear of rate limits.
   const results: Result[] = [];
-  for (let i = 0; i < COUNT; i += 1) {
-    const r = await evaluate(i, DEFAULT_EXTRACTOR_CONFIG);
-    results.push(r);
-    console.log(
-      `  persona ${String(i + 1).padStart(2)}  answered ${String(r.answered).padStart(2)}/25  ` +
-        `correct ${String(r.correct).padStart(2)}  ` +
-        `archetype ${r.extractedArchetype} vs ${r.truthArchetype}  ${r.agreed ? "MATCH" : "MISMATCH"}`,
+  const BATCH = 6;
+  for (let start = 0; start < COUNT; start += BATCH) {
+    const batch = await Promise.all(
+      Array.from({ length: Math.min(BATCH, COUNT - start) }, (_, k) =>
+        evaluate(start + k, DEFAULT_EXTRACTOR_CONFIG),
+      ),
     );
+    for (const [k, r] of batch.entries()) {
+      results.push(r);
+      console.log(
+        `  persona ${String(start + k + 1).padStart(2)}  answered ${String(r.answered).padStart(2)}/25  ` +
+          `correct ${String(r.correct).padStart(2)}  ` +
+          `archetype ${r.extractedArchetype} vs ${r.truthArchetype}  ${r.agreed ? "MATCH" : "MISMATCH"}`,
+      );
+    }
   }
 
   const answered = results.reduce((a, r) => a + r.answered, 0);
@@ -133,7 +142,11 @@ async function main() {
   console.log("");
   console.log(`  coverage           ${((answered / (COUNT * 25)) * 100).toFixed(1)}%  (questions one narrative answers)`);
   console.log(`  accuracy           ${((correct / Math.max(answered, 1)) * 100).toFixed(1)}%  (of the answers it did give)`);
-  console.log(`  archetype agreement ${((agreed / COUNT) * 100).toFixed(1)}%`);
+  console.log(
+    `  archetype agreement ${((agreed / COUNT) * 100).toFixed(1)}%  ` +
+      `<- FLATTERED: unanswered questions are filled with the person's TRUE answers,`,
+  );
+  console.log(`                          so only the ~${((answered / (COUNT * 25)) * 100).toFixed(0)}% extraction covered can go wrong.`);
   console.log("");
   console.log("  Accuracy by certainty — the threshold only works if these separate:");
   const merged: Record<string, { n: number; correct: number }> = {};
