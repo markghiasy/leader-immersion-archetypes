@@ -17,7 +17,7 @@ in a room over roughly twenty minutes, then near silence.
 | Compute | One container, 0.5 vCPU / 1 GB | It is a normal long-lived Node server. Scale to 2+ tasks for the event. |
 | Database | Postgres 14+ | RDS `db.t4g.micro` is ample. The whole dataset is a few thousand rows. |
 | TLS + domain | ACM cert + ALB (or CloudFront) | The public origin must be HTTPS. |
-| Secrets | Secrets Manager or SSM Parameter Store | Four required variables; see below. |
+| Secrets | Secrets Manager or SSM Parameter Store | Four required variables; see below. **All are created by you** — nothing needs handing over from the current deployment. |
 | Egress | Only if email is enabled | Outbound HTTPS to Resend. Nothing else calls out. |
 
 There is **no** object storage, cache, queue, or background worker. Nothing is written to
@@ -109,6 +109,61 @@ The app uses `node-postgres` with a small pool (`DB_POOL_MAX`, default 5) per pr
 long-lived containers that is all you need: two tasks × 5 connections is nothing against a
 `t4g.micro`'s limit. **RDS Proxy is only necessary if you later move this to Lambda**,
 where instance count is unbounded. Raise `DB_POOL_MAX` only alongside `max_connections`.
+
+## The domain, and why its order matters
+
+The app builds every invite link and QR code from `BASE_URL` **at the moment a page is
+rendered**. There is no rewriting later. So the sequence is not negotiable:
+
+1. Decide the subdomain (e.g. `archetype.example.com`).
+2. Create the ACM certificate and the Route 53 record; point them at the ALB.
+3. Set `BASE_URL` to `https://archetype.example.com` and **deploy**.
+4. Confirm a scorecard renders an invite link on that exact origin.
+5. *Only then* generate and print the QR code.
+
+Do steps 3–4 before anyone takes the quiz for real. A scorecard rendered under the wrong
+`BASE_URL` hands out invite links on the wrong host, and those links are already in
+someone's phone by the time you notice.
+
+The QR code should point at `https://<subdomain>/q/<event-slug>`.
+
+## Cutover from the interim deployment
+
+The app currently runs on a temporary host while AWS is built. Two things do **not** carry
+across by themselves.
+
+**Data.** The schema is three tables and the dataset is small, so a plain dump and restore
+is the whole job:
+
+```bash
+pg_dump --no-owner --no-acl --data-only \
+  -t events -t teams -t responses "$OLD_DATABASE_URL" > quiz-data.sql
+psql "$NEW_DATABASE_URL" -f quiz-data.sql        # after migrations have been applied
+psql "$NEW_DATABASE_URL" -c "SELECT setval(pg_get_serial_sequence('teams','id'),
+                                           COALESCE((SELECT MAX(id) FROM teams), 1));"
+psql "$NEW_DATABASE_URL" -c "SELECT setval(pg_get_serial_sequence('responses','seq'),
+                                           COALESCE((SELECT MAX(seq) FROM responses), 1));"
+```
+
+Resetting those two sequences matters: `responses.seq` drives every "newest first" ordering
+and `teams.id` is referenced by `responses.team_id`. Restore data without them and the next
+insert collides on a primary key.
+
+**Existing links.** Scorecard and invite URLs are permanent by promise, and they contain
+the origin they were shared from. Anything handed out during testing on the old host will
+**404 after cutover** unless you either keep the old deployment alive pointing at the same
+database, or redirect the old host to the new one. If the testing links do not matter,
+truncate and start clean instead — see below.
+
+**Starting clean** (safe to run before a real event, and the safer default):
+
+```sql
+TRUNCATE TABLE responses, teams RESTART IDENTITY CASCADE;
+```
+
+⚠️ Do **not** include `events` in that statement. The event row is what makes
+`/q/<slug>` attribute completions to the event; without it the quiz still works and every
+response is silently stored with no event attached.
 
 ## Health checks
 
