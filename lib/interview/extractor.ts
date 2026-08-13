@@ -39,13 +39,33 @@ const CONFIDENCE: Record<Certainty, number> = {
 
 export type ExtractorConfig = {
   model: string;
-  effort: "low" | "medium" | "high" | "xhigh" | "max";
+  /**
+   * Omit for models that do not accept it. Haiku 4.5 has no effort parameter and errors if
+   * one is sent, so this cannot simply default.
+   */
+  effort?: "low" | "medium" | "high" | "xhigh" | "max";
   maxTokens: number;
 };
 
+/**
+ * Measured on 32 identical replies (four-way classification of one reply against one
+ * question), accuracy / median latency:
+ *
+ *   opus-5 · medium   100.0%  3308ms
+ *   opus-5 · low      100.0%  3120ms   <- chosen
+ *   haiku-4-5          93.8%  2936ms
+ *
+ * Haiku buys 370ms and costs 6 points of accuracy; with one wrong answer in 25 flipping the
+ * archetype 15.4% of the time, that trades ~7 points of archetype agreement for ~1% of a
+ * turn. `low` matches `medium` exactly here and spends fewer thinking tokens.
+ *
+ * Do not reach for a more capable model to make this faster. Claude Fable 5 is the most
+ * capable model, not the quickest: thinking is always on and cannot be disabled, turns can
+ * run minutes, and it is priced above Opus. The task is a four-way classification.
+ */
 export const DEFAULT_EXTRACTOR_CONFIG: ExtractorConfig = {
   model: "claude-opus-5",
-  effort: "medium",
+  effort: "low",
   maxTokens: 8000,
 };
 
@@ -121,7 +141,7 @@ export async function extract(
     max_tokens: config.maxTokens,
     system: SYSTEM,
     output_config: {
-      effort: config.effort,
+      ...(config.effort ? { effort: config.effort } : {}),
       format: { type: "json_schema", schema: schemaFor(openQuestions) },
     },
     messages: [

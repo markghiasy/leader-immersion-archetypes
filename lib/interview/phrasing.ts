@@ -32,6 +32,7 @@ Rules:
 - Write like a person, not a form. No bullet points, no headings.`;
 
 export type PhrasingConfig = { model: string; effort: "low" | "medium" | "high" };
+/** Already at low effort: this is two sentences, and the person is waiting on it. */
 export const DEFAULT_PHRASING: PhrasingConfig = { model: "claude-opus-5", effort: "low" };
 
 /**
