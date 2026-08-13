@@ -1,0 +1,7 @@
+<!-- Placeholder brand mark, monochrome. Replace this file with the real logo (same
+     filename). It is rendered at 2rem tall via the .logo class. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 32" role="img" aria-label="Leader Archetype">
+  <rect x="0" y="4" width="24" height="24" rx="5" fill="#0a0a0a" />
+  <path d="M7 21.5 12 10l5 11.5" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="34" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" font-weight="700" fill="#0a0a0a">Leader Archetype</text>
+</svg>

@@ -1,0 +1,157 @@
+{
+  "$comment": "Leader Archetype content layer v2 (13 Aug 2026). Maps 1:1 onto profile numbers 1-8 in archetype-schema.json. Copy sourced from leaderarchetypesvWORKING.pptx with typos normalised; Australian English. This file is presentation copy only; it must never affect scoring.",
+  "archetypes": [
+    {
+      "profile": 1,
+      "name": "The Innovator",
+      "essence": "Can't stop inventing; finds the best ideas where others would have given up.",
+      "description": "Innovators can't stop themselves from thinking up new things. They often find their best ideas when others would have given up. Before Thomas Edison's light bulb succeeded he had many failures, but his persistence paid off.",
+      "exemplar": "Thomas Edison",
+      "strengths": [
+        "Keep innovating",
+        "Empower people to be operators",
+        "Encourage more creativity in teams",
+        "Set clear goals"
+      ],
+      "watchouts": [
+        "Over-involvement",
+        "Forgetting the operations",
+        "Spreading too far and wide",
+        "Ignoring feedback"
+      ]
+    },
+    {
+      "profile": 2,
+      "name": "The Influencer",
+      "essence": "Thrives in the spotlight; natural charm that draws people in.",
+      "description": "Influencers thrive in the spotlight. They adapt quickly and have a natural charm that draws people in. Their confidence is inspiring, like Oprah Winfrey, who turned her media presence into a global brand.",
+      "exemplar": "Oprah Winfrey",
+      "strengths": [
+        "Lead by example",
+        "Leverage your relationships",
+        "Stay adaptable",
+        "Drive marketing"
+      ],
+      "watchouts": [
+        "Overuse of personal brand",
+        "Lack of focus",
+        "Not spending time with the team",
+        "Burning out"
+      ]
+    },
+    {
+      "profile": 3,
+      "name": "The Guide",
+      "essence": "Motivates and directs; turns information into action.",
+      "description": "Guides excel at motivating and directing people. They turn information into action and are excellent at rallying their teams, similar to how Nelson Mandela led with vision and compassion.",
+      "exemplar": "Nelson Mandela",
+      "strengths": [
+        "Motivate the team",
+        "Keep delegating",
+        "Constant communication",
+        "Focus on culture"
+      ],
+      "watchouts": [
+        "Over-delegation",
+        "Being seen as playing favourites",
+        "Neglecting self-care",
+        "Over-promising"
+      ]
+    },
+    {
+      "profile": 4,
+      "name": "The Negotiator",
+      "essence": "Finds the best deals; brings people together for mutual benefit.",
+      "description": "Negotiators are skilled at finding the best deals and bringing people together for mutual benefit. They are charismatic and excel at reading situations, much like Warren Buffett in the investment world.",
+      "exemplar": "Warren Buffett",
+      "strengths": [
+        "Leverage relationships",
+        "Stay calm under pressure",
+        "Focus on win-win-win outcomes",
+        "Use your deal-making skills"
+      ],
+      "watchouts": [
+        "Risk of being seen as a manipulator",
+        "Overconfidence",
+        "Burning bridges",
+        "Short-term focus"
+      ]
+    },
+    {
+      "profile": 5,
+      "name": "The Play Maker",
+      "essence": "Reads the market; times the moves that maximise returns.",
+      "description": "Play Makers are experts at identifying the right time to buy and sell assets. They analyse markets and trends to maximise their profits, like George Soros, who made billions through strategic trades.",
+      "exemplar": "George Soros",
+      "strengths": [
+        "Data, data, data",
+        "Manage risk",
+        "Diversify",
+        "Stay patient"
+      ],
+      "watchouts": [
+        "Analysis paralysis",
+        "Risk aversion",
+        "Isolation",
+        "Ignoring your gut"
+      ]
+    },
+    {
+      "profile": 6,
+      "name": "The Architect",
+      "essence": "Patiently accumulates; thorough, compounding growth.",
+      "description": "Architects focus on gradually accumulating assets. They are patient and thorough, ensuring that their investments grow over time, similar to how Warren Buffett built his fortune.",
+      "exemplar": "Warren Buffett",
+      "strengths": [
+        "Focus on stability",
+        "Push optimisation",
+        "Details, details",
+        "Financial smarts"
+      ],
+      "watchouts": [
+        "Resistance to change",
+        "Micromanaging",
+        "Keeping pace with growth",
+        "Under-communicating the plan"
+      ]
+    },
+    {
+      "profile": 7,
+      "name": "The Guardian",
+      "essence": "Meticulous with resources; consistent cash flow, controlled risk.",
+      "description": "Guardians are meticulous in managing resources and ensuring consistent cash flow. They are detail-oriented and avoid unnecessary risks, like John D. Rockefeller, who dominated the oil industry through careful management.",
+      "exemplar": "John D. Rockefeller",
+      "strengths": [
+        "Control resources",
+        "Watch the risk-reward ratio",
+        "Implement systems",
+        "Focus on consistency"
+      ],
+      "watchouts": [
+        "Over-caution",
+        "Being rigid",
+        "Micromanaging",
+        "Lack of innovation"
+      ]
+    },
+    {
+      "profile": 8,
+      "name": "The Engineer",
+      "essence": "Refines systems; always tinkering toward a better way.",
+      "description": "Engineers are focused on improving and refining systems. They love to tinker and find better ways to do things, much like Henry Ford revolutionised automobile manufacturing.",
+      "exemplar": "Henry Ford",
+      "strengths": [
+        "Improve systems",
+        "Stay hands-on",
+        "Focus on innovation",
+        "Keep organised"
+      ],
+      "watchouts": [
+        "Trying to be perfect",
+        "Over-focusing on systems",
+        "Gaps in communication",
+        "Not seeing the big picture"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1157 @@
+{
+  "meta": {
+    "source": "Typeform response export (499 completed responses), reverse-engineered 2026-08-12",
+    "validation": "Scoring below reproduces the recorded counters and archetype for 499/499 responses",
+    "scoring_rule": "Each selected option adds +1 to each profile listed in its 'profiles' array. After 25 questions, the archetype is the profile with the highest total; ties are broken by the LOWEST profile number.",
+    "profiles": {
+      "1": "Profile 1 (name/description TBC)",
+      "2": "Profile 2 (name/description TBC)",
+      "3": "Profile 3 (name/description TBC)",
+      "4": "Profile 4 (name/description TBC)",
+      "5": "Profile 5 (name/description TBC)",
+      "6": "Profile 6 (name/description TBC)",
+      "7": "Profile 7 (name/description TBC)",
+      "8": "Profile 8 (name/description TBC)"
+    }
+  },
+  "questions": [
+    {
+      "id": "q01",
+      "text": "How do you approach new projects?",
+      "options": [
+        {
+          "id": "q01o1",
+          "text": "I enjoy planning out the details and logistics.",
+          "profiles": [
+            6,
+            8
+          ]
+        },
+        {
+          "id": "q01o2",
+          "text": "I focus on how to maximize profits and returns.",
+          "profiles": []
+        },
+        {
+          "id": "q01o3",
+          "text": "I love brainstorming and coming up with new ideas.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q01o4",
+          "text": "I prefer to negotiate and close deals to make things happen.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q02",
+      "text": "What motivates you the most?",
+      "options": [
+        {
+          "id": "q02o1",
+          "text": "Building strong and lasting relationships.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q02o2",
+          "text": "Creating something completely new.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q02o3",
+          "text": "Leading and inspiring a team to achieve a common goal.",
+          "profiles": []
+        },
+        {
+          "id": "q02o4",
+          "text": "Optimising and improving existing systems.",
+          "profiles": [
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q03",
+      "text": "How do you handle challenges?",
+      "options": [
+        {
+          "id": "q03o1",
+          "text": "I carefully analyse the situation before taking action.",
+          "profiles": [
+            6
+          ]
+        },
+        {
+          "id": "q03o2",
+          "text": "I rely on my network to help me navigate through them.",
+          "profiles": []
+        },
+        {
+          "id": "q03o3",
+          "text": "I take charge and direct others to overcome obstacles.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q03o4",
+          "text": "I thrive on solving problems with innovative solutions.",
+          "profiles": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q04",
+      "text": "How do you prefer to spend your workday?",
+      "options": [
+        {
+          "id": "q04o1",
+          "text": "Ensuring systems and processes are running smoothly.",
+          "profiles": [
+            6
+          ]
+        },
+        {
+          "id": "q04o2",
+          "text": "Exploring new ideas and possibilities.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q04o3",
+          "text": "Leading strategy meetings and making key decisions.",
+          "profiles": [
+            4
+          ]
+        },
+        {
+          "id": "q04o4",
+          "text": "Meeting new people and forming connections.",
+          "profiles": [
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q05",
+      "text": "What is your approach to risk?",
+      "options": [
+        {
+          "id": "q05o1",
+          "text": "I manage risks through careful negotiation and partnerships.",
+          "profiles": [
+            4
+          ]
+        },
+        {
+          "id": "q05o2",
+          "text": "I prefer to avoid risks and focus on stability.",
+          "profiles": [
+            6,
+            7
+          ]
+        },
+        {
+          "id": "q05o3",
+          "text": "I take calculated risks but always have a backup plan.",
+          "profiles": [
+            5
+          ]
+        },
+        {
+          "id": "q05o4",
+          "text": "I’m comfortable taking risks for high rewards.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q06",
+      "text": "What do you value most in your work?",
+      "options": [
+        {
+          "id": "q06o1",
+          "text": "Creativity and innovation.",
+          "profiles": []
+        },
+        {
+          "id": "q06o2",
+          "text": "Leadership and influence.",
+          "profiles": [
+            4
+          ]
+        },
+        {
+          "id": "q06o3",
+          "text": "Networking and collaboration.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q06o4",
+          "text": "Structure and organisation.",
+          "profiles": [
+            6,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q07",
+      "text": "How do you handle success?",
+      "options": [
+        {
+          "id": "q07o1",
+          "text": "I leverage my success to build more connections.",
+          "profiles": []
+        },
+        {
+          "id": "q07o2",
+          "text": "I look for the next big idea to pursue.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q07o3",
+          "text": "I refine and optimise what has worked well.",
+          "profiles": [
+            8
+          ]
+        },
+        {
+          "id": "q07o4",
+          "text": "I use my success to inspire and lead others.",
+          "profiles": [
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q08",
+      "text": "What kind of work environment do you prefer?",
+      "options": [
+        {
+          "id": "q08o1",
+          "text": "Dynamic and ever-changing.",
+          "profiles": []
+        },
+        {
+          "id": "q08o2",
+          "text": "Goal-oriented and focused.",
+          "profiles": []
+        },
+        {
+          "id": "q08o3",
+          "text": "Social and interactive.",
+          "profiles": [
+            5
+          ]
+        },
+        {
+          "id": "q08o4",
+          "text": "Stable and predictable.",
+          "profiles": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q09",
+      "text": "How do you prioritise tasks?",
+      "options": [
+        {
+          "id": "q09o1",
+          "text": "I focus on tasks that drive the team towards our goals.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q09o2",
+          "text": "I focus on the most creative and innovative tasks.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q09o3",
+          "text": "I prioritise tasks that ensure long-term stability.",
+          "profiles": [
+            6,
+            8
+          ]
+        },
+        {
+          "id": "q09o4",
+          "text": "I prioritise tasks that involve collaboration and networking.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q10",
+      "text": "How do you measure success?",
+      "options": [
+        {
+          "id": "q10o1",
+          "text": "By the achievement of strategic goals and objectives.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q10o2",
+          "text": "By the efficiency and stability of the systems in place.",
+          "profiles": [
+            7
+          ]
+        },
+        {
+          "id": "q10o3",
+          "text": "By the impact and innovation of my ideas.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q10o4",
+          "text": "By the strength and breadth of my relationships.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q11",
+      "text": "What role do you naturally gravitate towards in a team?",
+      "options": [
+        {
+          "id": "q11o1",
+          "text": "The connector and communicator.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q11o2",
+          "text": "The creative idea generator.",
+          "profiles": []
+        },
+        {
+          "id": "q11o3",
+          "text": "The leader and decision-maker.",
+          "profiles": [
+            4
+          ]
+        },
+        {
+          "id": "q11o4",
+          "text": "The organiser and planner.",
+          "profiles": [
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q12",
+      "text": "How do you respond to feedback?",
+      "options": [
+        {
+          "id": "q12o1",
+          "text": "I incorporate it to improve team performance.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q12o2",
+          "text": "I see it as an opportunity to strengthen relationships.",
+          "profiles": [
+            5
+          ]
+        },
+        {
+          "id": "q12o3",
+          "text": "I use it to fine-tune processes and systems.",
+          "profiles": []
+        },
+        {
+          "id": "q12o4",
+          "text": "I welcome it if it helps me improve my ideas.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q13",
+      "text": "How do you approach learning?",
+      "options": [
+        {
+          "id": "q13o1",
+          "text": "I focus on mastering and refining existing knowledge.",
+          "profiles": []
+        },
+        {
+          "id": "q13o2",
+          "text": "I learn best through interactions with others.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q13o3",
+          "text": "I learn by leading and guiding others.",
+          "profiles": []
+        },
+        {
+          "id": "q13o4",
+          "text": "I seek out new knowledge and ideas continuously.",
+          "profiles": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q14",
+      "text": "How do you prefer to work on a project?",
+      "options": [
+        {
+          "id": "q14o1",
+          "text": "I enjoy collaborating with others on the project.",
+          "profiles": [
+            5
+          ]
+        },
+        {
+          "id": "q14o2",
+          "text": "I like starting new projects from scratch.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q14o3",
+          "text": "I like taking charge and driving the project to completion.",
+          "profiles": []
+        },
+        {
+          "id": "q14o4",
+          "text": "I prefer improving and optimising ongoing projects.",
+          "profiles": [
+            6,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q15",
+      "text": "How do you view competition?",
+      "options": [
+        {
+          "id": "q15o1",
+          "text": "It drives me to be more innovative.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q15o2",
+          "text": "It motivates me to lead my team to victory.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q15o3",
+          "text": "It pushes me to improve efficiency.",
+          "profiles": [
+            7
+          ]
+        },
+        {
+          "id": "q15o4",
+          "text": "It’s an opportunity to build alliances.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q16",
+      "text": "What is your approach to decision-making?",
+      "options": [
+        {
+          "id": "q16o1",
+          "text": "I consult my network and collaborators.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q16o2",
+          "text": "I make decisions based on creative intuition.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q16o3",
+          "text": "I make quick, strategic decisions to keep momentum.",
+          "profiles": [
+            4
+          ]
+        },
+        {
+          "id": "q16o4",
+          "text": "I rely on data and analysis to make decisions.",
+          "profiles": [
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q17",
+      "text": "How do you handle failure?",
+      "options": [
+        {
+          "id": "q17o1",
+          "text": "I analyse what went wrong to avoid it in the future.",
+          "profiles": [
+            6
+          ]
+        },
+        {
+          "id": "q17o2",
+          "text": "I reach out to my network for support and advice.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q17o3",
+          "text": "I see it as a stepping stone to the next big idea.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q17o4",
+          "text": "I use it as a learning experience to improve leadership.",
+          "profiles": [
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q18",
+      "text": "How do you prefer to communicate?",
+      "options": [
+        {
+          "id": "q18o1",
+          "text": "By building and maintaining relationships.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q18o2",
+          "text": "By providing clear instructions and guidelines.",
+          "profiles": [
+            6,
+            7
+          ]
+        },
+        {
+          "id": "q18o3",
+          "text": "Through motivating and inspiring others.",
+          "profiles": []
+        },
+        {
+          "id": "q18o4",
+          "text": "Through sharing new ideas and visions.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q19",
+      "text": "What type of challenges excite you?",
+      "options": [
+        {
+          "id": "q19o1",
+          "text": "Challenges that involve negotiating and building partnerships.",
+          "profiles": []
+        },
+        {
+          "id": "q19o2",
+          "text": "Challenges that involve optimising systems.",
+          "profiles": [
+            6
+          ]
+        },
+        {
+          "id": "q19o3",
+          "text": "Challenges that require innovative solutions.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q19o4",
+          "text": "Challenges that require strategic leadership.",
+          "profiles": [
+            3,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q20",
+      "text": "How do you handle uncertainty?",
+      "options": [
+        {
+          "id": "q20o1",
+          "text": "I embrace it as an opportunity for creativity.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q20o2",
+          "text": "I navigate it by leveraging my network.",
+          "profiles": []
+        },
+        {
+          "id": "q20o3",
+          "text": "I take charge and guide others through it.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q20o4",
+          "text": "I work to minimise it through careful planning.",
+          "profiles": [
+            6,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q21",
+      "text": "What is your approach to growth?",
+      "options": [
+        {
+          "id": "q21o1",
+          "text": "Expand my network and influence.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q21o2",
+          "text": "Improve and refine existing processes.",
+          "profiles": [
+            6
+          ]
+        },
+        {
+          "id": "q21o3",
+          "text": "Innovate and explore new opportunities.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q21o4",
+          "text": "Set and achieve ambitious goals.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q22",
+      "text": "How do you deal with stress?",
+      "options": [
+        {
+          "id": "q22o1",
+          "text": "I channel it into creative problem-solving.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q22o2",
+          "text": "I manage it through organisation and planning.",
+          "profiles": [
+            7
+          ]
+        },
+        {
+          "id": "q22o3",
+          "text": "I seek support from my network.",
+          "profiles": [
+            2
+          ]
+        },
+        {
+          "id": "q22o4",
+          "text": "I use it as a motivator to push forward.",
+          "profiles": []
+        }
+      ]
+    },
+    {
+      "id": "q23",
+      "text": "How do you prefer to collaborate?",
+      "options": [
+        {
+          "id": "q23o1",
+          "text": "By connecting people and resources.",
+          "profiles": [
+            5
+          ]
+        },
+        {
+          "id": "q23o2",
+          "text": "By contributing creative ideas.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q23o3",
+          "text": "By leading and directing the team.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q23o4",
+          "text": "By organising and managing tasks.",
+          "profiles": [
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q24",
+      "text": "What is your main focus in business?",
+      "options": [
+        {
+          "id": "q24o1",
+          "text": "Efficiency and stability.",
+          "profiles": [
+            6,
+            7
+          ]
+        },
+        {
+          "id": "q24o2",
+          "text": "Innovation and creating value.",
+          "profiles": [
+            1
+          ]
+        },
+        {
+          "id": "q24o3",
+          "text": "Leadership and strategic growth.",
+          "profiles": [
+            3
+          ]
+        },
+        {
+          "id": "q24o4",
+          "text": "Relationships and partnerships.",
+          "profiles": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "q25",
+      "text": "What drives your ambition?",
+      "options": [
+        {
+          "id": "q25o1",
+          "text": "The ambition to lead and achieve success.",
+          "profiles": [
+            4
+          ]
+        },
+        {
+          "id": "q25o2",
+          "text": "The desire to create something new and impactful.",
+          "profiles": []
+        },
+        {
+          "id": "q25o3",
+          "text": "The goal to connect and collaborate with others.",
+          "profiles": []
+        },
+        {
+          "id": "q25o4",
+          "text": "The need to build something reliable and lasting.",
+          "profiles": [
+            6,
+            7
+          ]
+        }
+      ]
+    }
+  ],
+  "test_vectors": [
+    {
+      "answers": {
+        "q01": "q01o3",
+        "q02": "q02o3",
+        "q03": "q03o1",
+        "q04": "q04o2",
+        "q05": "q05o1",
+        "q06": "q06o3",
+        "q07": "q07o3",
+        "q08": "q08o4",
+        "q09": "q09o3",
+        "q10": "q10o3",
+        "q11": "q11o1",
+        "q12": "q12o4",
+        "q13": "q13o2",
+        "q14": "q14o1",
+        "q15": "q15o3",
+        "q16": "q16o1",
+        "q17": "q17o2",
+        "q18": "q18o4",
+        "q19": "q19o2",
+        "q20": "q20o3",
+        "q21": "q21o4",
+        "q22": "q22o4",
+        "q23": "q23o1",
+        "q24": "q24o1",
+        "q25": "q25o3"
+      },
+      "expected_totals_by_profile": {
+        "4": 1,
+        "6": 4,
+        "3": 1,
+        "8": 2,
+        "2": 5,
+        "1": 3,
+        "7": 2,
+        "5": 3
+      },
+      "expected_archetype": 2,
+      "tie_break_exercised": false
+    },
+    {
+      "answers": {
+        "q01": "q01o3",
+        "q02": "q02o1",
+        "q03": "q03o1",
+        "q04": "q04o1",
+        "q05": "q05o1",
+        "q06": "q06o3",
+        "q07": "q07o3",
+        "q08": "q08o2",
+        "q09": "q09o1",
+        "q10": "q10o1",
+        "q11": "q11o1",
+        "q12": "q12o2",
+        "q13": "q13o2",
+        "q14": "q14o4",
+        "q15": "q15o3",
+        "q16": "q16o4",
+        "q17": "q17o2",
+        "q18": "q18o2",
+        "q19": "q19o2",
+        "q20": "q20o2",
+        "q21": "q21o1",
+        "q22": "q22o3",
+        "q23": "q23o4",
+        "q24": "q24o1",
+        "q25": "q25o3"
+      },
+      "expected_totals_by_profile": {
+        "4": 1,
+        "6": 7,
+        "3": 2,
+        "8": 3,
+        "2": 7,
+        "1": 1,
+        "7": 3,
+        "5": 1
+      },
+      "expected_archetype": 2,
+      "tie_break_exercised": true
+    },
+    {
+      "answers": {
+        "q01": "q01o3",
+        "q02": "q02o3",
+        "q03": "q03o3",
+        "q04": "q04o2",
+        "q05": "q05o3",
+        "q06": "q06o3",
+        "q07": "q07o4",
+        "q08": "q08o3",
+        "q09": "q09o4",
+        "q10": "q10o4",
+        "q11": "q11o1",
+        "q12": "q12o4",
+        "q13": "q13o4",
+        "q14": "q14o1",
+        "q15": "q15o3",
+        "q16": "q16o1",
+        "q17": "q17o1",
+        "q18": "q18o4",
+        "q19": "q19o1",
+        "q20": "q20o1",
+        "q21": "q21o4",
+        "q22": "q22o2",
+        "q23": "q23o2",
+        "q24": "q24o1",
+        "q25": "q25o3"
+      },
+      "expected_totals_by_profile": {
+        "4": 0,
+        "6": 2,
+        "3": 2,
+        "8": 0,
+        "2": 3,
+        "1": 5,
+        "7": 3,
+        "5": 3
+      },
+      "expected_archetype": 1,
+      "tie_break_exercised": false
+    },
+    {
+      "answers": {
+        "q01": "q01o1",
+        "q02": "q02o4",
+        "q03": "q03o1",
+        "q04": "q04o1",
+        "q05": "q05o3",
+        "q06": "q06o4",
+        "q07": "q07o3",
+        "q08": "q08o4",
+        "q09": "q09o3",
+        "q10": "q10o3",
+        "q11": "q11o4",
+        "q12": "q12o3",
+        "q13": "q13o2",
+        "q14": "q14o4",
+        "q15": "q15o3",
+        "q16": "q16o4",
+        "q17": "q17o3",
+        "q18": "q18o2",
+        "q19": "q19o2",
+        "q20": "q20o4",
+        "q21": "q21o2",
+        "q22": "q22o2",
+        "q23": "q23o4",
+        "q24": "q24o1",
+        "q25": "q25o3"
+      },
+      "expected_totals_by_profile": {
+        "4": 0,
+        "6": 13,
+        "3": 0,
+        "8": 6,
+        "2": 1,
+        "1": 2,
+        "7": 6,
+        "5": 2
+      },
+      "expected_archetype": 6,
+      "tie_break_exercised": false
+    },
+    {
+      "answers": {
+        "q01": "q01o1",
+        "q02": "q02o1",
+        "q03": "q03o1",
+        "q04": "q04o2",
+        "q05": "q05o3",
+        "q06": "q06o1",
+        "q07": "q07o4",
+        "q08": "q08o2",
+        "q09": "q09o3",
+        "q10": "q10o1",
+        "q11": "q11o3",
+        "q12": "q12o3",
+        "q13": "q13o4",
+        "q14": "q14o1",
+        "q15": "q15o2",
+        "q16": "q16o1",
+        "q17": "q17o3",
+        "q18": "q18o3",
+        "q19": "q19o4",
+        "q20": "q20o1",
+        "q21": "q21o4",
+        "q22": "q22o3",
+        "q23": "q23o1",
+        "q24": "q24o4",
+        "q25": "q25o2"
+      },
+      "expected_totals_by_profile": {
+        "4": 2,
+        "6": 3,
+        "3": 4,
+        "8": 2,
+        "2": 3,
+        "1": 4,
+        "7": 0,
+        "5": 4
+      },
+      "expected_archetype": 1,
+      "tie_break_exercised": true
+    },
+    {
+      "answers": {
+        "q01": "q01o4",
+        "q02": "q02o3",
+        "q03": "q03o1",
+        "q04": "q04o3",
+        "q05": "q05o3",
+        "q06": "q06o3",
+        "q07": "q07o1",
+        "q08": "q08o3",
+        "q09": "q09o1",
+        "q10": "q10o4",
+        "q11": "q11o3",
+        "q12": "q12o3",
+        "q13": "q13o4",
+        "q14": "q14o1",
+        "q15": "q15o2",
+        "q16": "q16o1",
+        "q17": "q17o4",
+        "q18": "q18o2",
+        "q19": "q19o3",
+        "q20": "q20o3",
+        "q21": "q21o3",
+        "q22": "q22o2",
+        "q23": "q23o1",
+        "q24": "q24o4",
+        "q25": "q25o4"
+      },
+      "expected_totals_by_profile": {
+        "4": 2,
+        "6": 3,
+        "3": 4,
+        "8": 0,
+        "2": 2,
+        "1": 3,
+        "7": 3,
+        "5": 5
+      },
+      "expected_archetype": 5,
+      "tie_break_exercised": false
+    },
+    {
+      "answers": {
+        "q01": "q01o1",
+        "q02": "q02o1",
+        "q03": "q03o2",
+        "q04": "q04o2",
+        "q05": "q05o3",
+        "q06": "q06o4",
+        "q07": "q07o4",
+        "q08": "q08o1",
+        "q09": "q09o1",
+        "q10": "q10o1",
+        "q11": "q11o1",
+        "q12": "q12o1",
+        "q13": "q13o4",
+        "q14": "q14o1",
+        "q15": "q15o3",
+        "q16": "q16o3",
+        "q17": "q17o4",
+        "q18": "q18o3",
+        "q19": "q19o1",
+        "q20": "q20o3",
+        "q21": "q21o1",
+        "q22": "q22o1",
+        "q23": "q23o3",
+        "q24": "q24o3",
+        "q25": "q25o1"
+      },
+      "expected_totals_by_profile": {
+        "4": 2,
+        "6": 2,
+        "3": 8,
+        "8": 1,
+        "2": 3,
+        "1": 3,
+        "7": 2,
+        "5": 2
+      },
+      "expected_archetype": 3,
+      "tie_break_exercised": false
+    },
+    {
+      "answers": {
+        "q01": "q01o1",
+        "q02": "q02o4",
+        "q03": "q03o3",
+        "q04": "q04o3",
+        "q05": "q05o1",
+        "q06": "q06o2",
+        "q07": "q07o4",
+        "q08": "q08o1",
+        "q09": "q09o1",
+        "q10": "q10o3",
+        "q11": "q11o3",
+        "q12": "q12o2",
+        "q13": "q13o4",
+        "q14": "q14o3",
+        "q15": "q15o3",
+        "q16": "q16o3",
+        "q17": "q17o1",
+        "q18": "q18o2",
+        "q19": "q19o4",
+        "q20": "q20o1",
+        "q21": "q21o2",
+        "q22": "q22o3",
+        "q23": "q23o4",
+        "q24": "q24o2",
+        "q25": "q25o2"
+      },
+      "expected_totals_by_profile": {
+        "4": 6,
+        "6": 4,
+        "3": 4,
+        "8": 3,
+        "2": 1,
+        "1": 4,
+        "7": 2,
+        "5": 1
+      },
+      "expected_archetype": 4,
+      "tie_break_exercised": false
+    }
+  ]
+}

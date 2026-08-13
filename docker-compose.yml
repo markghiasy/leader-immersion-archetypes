@@ -1,0 +1,27 @@
+# Local development against a real Postgres, no cloud account required.
+#
+#   docker compose up -d
+#   DATABASE_URL="postgresql://quiz:quiz@localhost:5433/quiz" npm run db:migrate
+#   DATABASE_URL="postgresql://quiz:quiz@localhost:5433/quiz" npm run seed
+#   npm run dev
+#
+# Port 5433 so it cannot collide with a Postgres already running on the machine.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: quiz
+      POSTGRES_PASSWORD: quiz
+      POSTGRES_DB: quiz
+    ports:
+      - "5433:5432"
+    volumes:
+      - quiz-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quiz -d quiz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  quiz-pgdata:

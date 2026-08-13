@@ -1,0 +1,107 @@
+/* =====================================================================
+ * theme.css — THE ONLY FILE A DESIGNER NEEDS TO EDIT.
+ *
+ * Every colour, font, radius, spacing step and shadow in the app resolves through a
+ * token below. Replace the values here (and /public/logo.svg) to rebrand the entire
+ * application. Do not add raw colours or pixel values to component CSS.
+ *
+ * Current theme: ABSOLUTE MONOCHROME. Black, white and greys only — no accent hue
+ * anywhere. Hierarchy comes from weight, scale, fill and contrast, never from colour,
+ * which also means nothing in the UI depends on colour to be understood.
+ *
+ * See THEMING.md for the full token list and the two hand-off rules.
+ * ===================================================================== */
+
+:root {
+  /* --- Brand ------------------------------------------------------- */
+  --color-accent: #0a0a0a;
+  --color-accent-hover: #333333;
+  --color-accent-soft: #f1f1f1;
+  --color-on-accent: #ffffff;
+
+  /* --- Surfaces and text ------------------------------------------- */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f6f6;
+  --color-text: #0a0a0a;
+  --color-text-muted: #5c5c5c;
+  --color-border: #e2e2e2;
+  --color-border-strong: #b4b4b4;
+
+  /* --- Semantic ----------------------------------------------------- */
+  /* Two sides of one coin: same ink, distinguished by fill, not by hue. */
+  --color-strength: #0a0a0a;
+  --color-strength-bg: #f1f1f1;
+  --color-strength-border: #d4d4d4;
+  --color-watchout: #0a0a0a;
+  --color-watchout-bg: #ffffff;
+  --color-watchout-border: #d4d4d4;
+  /* Errors carry their meaning in the words and a heavy rule, never in colour. */
+  --color-danger: #0a0a0a;
+  --color-danger-bg: #f1f1f1;
+  --color-focus: #0a0a0a;
+
+  /* --- Typography ---------------------------------------------------- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+
+  --weight-regular: 400;
+  --weight-medium: 550;
+  --weight-bold: 700;
+
+  --leading-tight: 1.18;
+  --leading-normal: 1.55;
+
+  --tracking-wide: 0.08em;
+
+  /* --- Space --------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* --- Shape --------------------------------------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --border-width: 1px;
+  --border-width-heavy: 2px;
+
+  --shadow-sm: 0 1px 2px rgba(10, 10, 10, 0.06);
+  --shadow-md: 0 4px 16px rgba(10, 10, 10, 0.08);
+
+  /* --- Layout -------------------------------------------------------- */
+  --content-width: 40rem;
+  --content-width-wide: 76rem;
+  --tap-target: 3rem;
+
+  /* --- Signature block (emblem + profile shape) ---------------------- */
+  --emblem-size: 8.5rem;
+  --emblem-stroke: 2.25;
+  --chart-bar-height: 0.5rem;
+
+  /* --- Motion -------------------------------------------------------- */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+  }
+}

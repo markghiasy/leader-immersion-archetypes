@@ -1,36 +1,271 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Leader Archetype Quiz
 
-## Getting Started
+A typeform-style quiz for live events. An attendee scans a QR code, answers 25 questions one
+at a time, and lands on a permanent scorecard showing one of eight leader archetypes. Every
+scorecard carries a team invite link: anyone who completes the quiz through it is attributed
+back to the sharer, appears on the sharer's roster, and gets a scorecard and invite link of
+their own. That loop is the point of the product, not a feature bolted on the side.
 
-First, run the development server:
+Built for 100–1000 people finishing the quiz at once, on phones.
+
+## Contents
+
+- [Quick start](#quick-start)
+- [Environment](#environment)
+- [Deploying](#deploying)
+- [Custom domain](#custom-domain)
+- [How it works](#how-it-works)
+- [Scoring is frozen](#scoring-is-frozen)
+- [Tests](#tests)
+- [Manual smoke test](#manual-smoke-test)
+- [Hosting](#hosting)
+- [Project layout](#project-layout)
+
+## Quick start
 
 ```bash
+npm install
+cp .env.example .env.local        # fill in DATABASE_URL at minimum
+npm run db:migrate                # apply drizzle/*.sql
+npm run seed                      # one demo event + a team with two members
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open the URLs the seed prints: an event entry page, a populated scorecard, its invite
+link, and `/admin`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Useful scripts:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Local dev server |
+| `npm run build` / `npm start` | Production build and serve |
+| `npm test` | Full test suite (scoring replay, API, seed, theming) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | ESLint |
+| `npm run verify` | typecheck + lint + test + build, in that order |
+| `npm run db:generate` | Generate a migration from `lib/schema.ts` after a schema change |
+| `npm run db:migrate` | Apply pending migrations to `DATABASE_URL` |
+| `npm run db:studio` | Drizzle Studio against `DATABASE_URL` |
+| `npm run seed` | Demo event, team and responses |
+| `docker compose up -d` | Local Postgres on port 5433 for development |
 
-## Learn More
+## Environment
 
-To learn more about Next.js, take a look at the following resources:
+Copy `.env.example` to `.env.local`. Every variable:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `DATABASE_URL` | yes | Any standard Postgres URL — RDS, Aurora, a container, or a managed provider. Use the **pooled** endpoint if your provider offers one. |
+| `BASE_URL` | yes in production | Absolute origin, no trailing slash. Builds invite links, QR codes and email buttons. Falls back to `VERCEL_URL`, then `http://localhost:3000`. |
+| `ADMIN_USER` | yes | HTTP Basic Auth for `/admin`. |
+| `ADMIN_PASS` | yes | With either unset, `/admin` returns 503 — it fails closed. |
+| `RESEND_API_KEY` | no | Without it the "email me my scorecard" section is hidden and a startup warning is logged. Everything else works. |
+| `EMAIL_FROM` | no | e.g. `Leader Archetype <noreply@yourdomain.com>`. Must be a domain verified in Resend. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploying
 
-## Deploy on Vercel
+For AWS, follow **[docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)** instead — it covers the
+container build, RDS, health checks and scaling. The steps below are the Vercel path.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Create the database.** Any Postgres. If your provider offers a pooled endpoint, use
+   it — serverless functions open many short connections.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Create the Vercel project.** Import the repo. Framework preset: Next.js. No build
+   command overrides are needed.
+
+3. **Set environment variables** in Vercel → Settings → Environment Variables, for Production
+   and Preview: `DATABASE_URL`, `BASE_URL`, `ADMIN_USER`, `ADMIN_PASS`, and optionally
+   `RESEND_API_KEY` and `EMAIL_FROM`. Set `BASE_URL` to the final public origin
+   (e.g. `https://archetype.yourdomain.com`) — invite links and QR codes are built from it,
+   and a wrong value ships wrong links into people's phones.
+
+4. **Run migrations.** These are not run automatically, deliberately — several instances
+   starting at once must not race each other. From your machine, with the production
+   `DATABASE_URL` in your environment:
+
+   ```bash
+   DATABASE_URL="postgresql://…" npm run db:migrate
+   ```
+
+   To create a new migration after changing `lib/schema.ts`:
+
+   ```bash
+   npm run db:generate     # writes drizzle/NNNN_name.sql — commit it
+   npm run db:migrate      # applies it
+   ```
+
+   `npm run db:push` exists for throwaway databases; use `generate` + `migrate` for anything
+   real, so the change is reviewable and repeatable.
+
+5. **Seed if you want demo data.** `DATABASE_URL="…" npm run seed`. Skip this for a real
+   event; instead insert the event row you need:
+
+   ```sql
+   insert into events (slug, name) values ('melbourne-aug', 'Melbourne — August');
+   ```
+
+   The event slug is what makes `/q/melbourne-aug` attribute responses to that event. An
+   unknown slug still gives a working quiz; the response is just stored with no event.
+
+6. **Point the QR code** at `https://your-domain/q/<event-slug>`.
+
+### Custom domain
+
+Vercel → Settings → Domains → add the domain, then create the DNS record Vercel shows you
+(`CNAME` to `cname.vercel-dns.com` for a subdomain, or the apex `A` record). Once it
+resolves, update `BASE_URL` to the new origin and redeploy — links already printed on
+existing scorecards use whatever `BASE_URL` was at render time, so change it before the
+event, not during.
+
+## How it works
+
+| Route | Rendering | Database |
+| --- | --- | --- |
+| `/q/[event]` | static, cached | none — a thousand scans cost nothing |
+| `/` | static | none |
+| `/t/[teamSlug]` | dynamic | one indexed lookup for the inviter's name |
+| `/r/[resultId]` | dynamic | two indexed reads |
+| `/admin` | dynamic, Basic Auth | filtered reads |
+| `/api/health` | dynamic | none — add `?deep=1` to check Postgres too |
+
+The quiz itself holds all state in React. There are **no network calls between starting the
+quiz and submitting it**, and nothing is written until the final answer. An abandoned quiz
+writes nothing; a refresh mid-quiz starts over. That is the deliberate trade that keeps a
+thousand simultaneous takers off the database.
+
+On submit, one request does everything: validate → score server-side → insert the response
+and create its team inside a single transaction. Either both rows land or neither does, so
+there is no state in which a scorecard exists without its invite link.
+
+Attribution is one hop only. A teammate joining via your link appears on your roster and
+gets their own fresh invite link; their invitees form a new tree, not a downline.
+
+## Scoring is frozen
+
+`inputs/archetype-schema.json` is the source of truth: 25 questions, 4 options each, each
+option incrementing zero, one or two of eight profile counters. It was reverse-engineered
+from 499 real responses and validated 499/499. Some options legitimately increment nothing —
+that is not a bug to fix.
+
+- Highest total wins; **ties break to the lowest profile number**.
+- Scoring runs server-side only, in the pure `score()` in `lib/scoring.ts`. The browser is
+  sent question and option *text* only, never the mappings.
+- The schema's 8 replay vectors (2 of which exercise the tie-break) run in the test suite and
+  assert exact totals and winner. **If one fails, the implementation is wrong — never the
+  schema, never the test.**
+- `inputs/archetype-content.json` is presentation copy only. It cannot affect scoring, and a
+  test asserts the client payload contains no profile data.
+
+## Tests
+
+```bash
+npm test
+```
+
+38 tests across four files:
+
+- `tests/scoring.test.ts` — all 8 replay vectors; every one of the 100 option mappings
+  applied in isolation; tie-break direction; purity; the client payload leaking nothing.
+- `tests/api.test.ts` — the submit route end to end against **real Postgres running in
+  process** (PGlite): happy path, event resolution, team attribution, unrecognised invite
+  links, roster dedupe-by-email on retake, roster carrying no contact details, and validation
+  rejections writing nothing at all.
+- `tests/seed.test.ts` — the seed leaves `/admin` and a roster with something to render, and
+  the admin filters behave.
+- `tests/theme.test.ts` — the email's mirrored palette matches `theme.css`, every token is
+  documented in `THEMING.md`, no raw colours outside `theme.css`, and the email escapes names.
+
+The API tests run the same Drizzle queries as production against a different driver, which is
+also the standing proof that the app is not coupled to any one Postgres host.
+
+## Manual smoke test
+
+Run through this before an event, on a phone, against the deployed URL.
+
+**Event journey**
+
+1. Scan the QR / open `/q/<event-slug>` → hero, "About 3 minutes", Start button.
+2. Start → contact form. Submit it empty → inline errors on first name, last name, email,
+   mobile. Company is optional.
+3. Fill it in → question 1 of 25.
+4. Tap an option → it highlights and auto-advances. Tap **Back** → the previous question is
+   still selected and editable.
+5. Tab to the options and use arrow keys → selection moves without skipping ahead; **Next**
+   advances. Focus ring is visible throughout.
+6. Answer all 25 → "Calculating your archetype…" → lands on `/r/{id}`.
+7. Scorecard shows: number + name, essence, description, 4 strengths (green), 4 watch-outs
+   (amber), invite link, QR, empty roster, email section, closing CTA.
+8. Copy the scorecard URL, open it in a private window → identical page. Reload → still there.
+
+**Team journey (the loop)**
+
+9. On the scorecard, tap **Copy link** → "Link copied." On iOS/Android, **Share** opens the
+   native sheet.
+10. Open the invite link on a second phone → "**{first name} invited you**" above the hero.
+11. Complete the quiz there → that person gets their own scorecard, with the quiet line
+    "You joined {first name}'s team." and their **own** invite link (different from the first).
+12. Reload the first person's scorecard → the teammate appears by name and archetype, with
+    the mix summary line. No email or phone number anywhere on the roster.
+13. Scan the QR on the scorecard with a third phone → same invite landing page.
+14. Open `/t/aaaaaaaaaaaaaa` (a bogus slug) → friendly note, quiz still works, no attribution.
+15. Open `/r/nonsense` → the "could not find that scorecard" page, not an error.
+
+**Email** (only if `RESEND_API_KEY` is set)
+
+16. On a scorecard, the email field is pre-filled with the address given at capture. Send →
+    "Sent." The email reproduces archetype, description, strengths, watch-outs, and its button
+    opens the same scorecard.
+17. Send four times in an hour → the fourth is refused with a friendly message.
+
+**Admin**
+
+18. Open `/admin` → browser prompts for credentials. Wrong password → prompt again.
+19. Correct credentials → responses table with name, email, mobile, company, archetype,
+    source, invited-by, timestamp; archetype distribution above it; teams table below.
+20. Filter by event, archetype and source → counts and rows both update.
+21. **Export CSV** → downloads the current filter with all contact fields and attribution.
+22. Open `/admin/export` in a private window → 401, not a CSV.
+
+## Hosting
+
+The app is **host-neutral**: a normal Node server plus standard Postgres via
+`node-postgres`. No object storage, cache, queue, or worker; nothing is written to local
+disk; no edge-only APIs. It runs unchanged on ECS Fargate, App Runner, EC2, or any other
+platform that runs a container, and on Vercel.
+
+- **AWS** — see **[docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md)**. A multi-stage
+  `Dockerfile` ships in the repo; the build needs no secrets and no database.
+- **Local Postgres** — `docker compose up -d` gives you one on port 5433, no cloud account
+  needed.
+- `vercel.json` is inert anywhere else and can be deleted once the migration is done.
+
+`lib/db.ts` is the only file in the app that knows how the database is reached.
+
+## Project layout
+
+```
+app/
+  theme.css               all design tokens — the rebrand surface (see THEMING.md)
+  globals.css             structural styles; no raw colours
+  page.tsx                generic entry (static)
+  q/[event]/              QR target (static, no DB)
+  t/[teamSlug]/           invite landing
+  r/[resultId]/           permanent scorecard
+  admin/                  dashboard + CSV export
+  api/submit/             the single write
+  api/email-scorecard/    Resend send, rate-limited per scorecard
+components/               Quiz, ShareBlock, EmailScorecard, chrome
+lib/
+  scoring.ts              the frozen pure score()
+  schema.ts               Drizzle tables
+  db.ts                   THE DRIVER SEAM — the only file that knows how Postgres is reached
+  queries.ts              all data access
+  validation.ts           zod schemas shared by client and server
+  email.ts                branded scorecard email
+inputs/                   archetype-schema.json (frozen) + archetype-content.json (copy)
+drizzle/                  generated migrations
+scripts/                  migrate.ts, seed.ts
+tests/                    scoring replay, API, seed, theming
+proxy.ts                  Basic Auth for /admin
+```
