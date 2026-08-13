@@ -137,6 +137,12 @@ export default function InterviewChat({
   const [attempt, setAttempt] = useState<Attempt | null>(null);
   const [reply, setReply] = useState("");
   const [optionsOpen, setOptionsOpen] = useState(false);
+  // Derived, not stored: the options show if the person opened them, OR if the server is
+  // re-asking because it could not read the last answer. Hiding the floor from the one
+  // person who has just demonstrated they need it is how a conversation becomes a dead end.
+  // Derivation beats a state-setting effect here — no cascading render, no stale flag when
+  // the next turn lands.
+  const showOptions = optionsOpen || ask?.retry === true;
   const [fallback, setFallback] = useState<FallbackQuestion[] | null>(null);
   const [fallbackAnswers, setFallbackAnswers] = useState<Record<number, number>>({});
 
@@ -509,13 +515,13 @@ export default function InterviewChat({
             <button
               type="button"
               className={styles.tapToggle}
-              aria-expanded={optionsOpen}
+              aria-expanded={showOptions}
               aria-controls="interview-options"
               onClick={() => setOptionsOpen((open) => !open)}
             >
-              {optionsOpen ? "Hide the answers" : "Or choose an answer"}
+              {showOptions ? "Hide the answers" : "Or choose an answer"}
             </button>
-            <div id="interview-options" className={styles.tiles} hidden={!optionsOpen}>
+            <div id="interview-options" className={styles.tiles} hidden={!showOptions}>
               {options.map((option, optionIndex) => (
                 <button
                   key={optionIndex}

@@ -42,7 +42,7 @@ import {
   type Move,
 } from "./controller";
 import { extract } from "./extractor";
-import { askFor, narrowingAsk } from "./phrasing";
+import { askFor, narrowingAsk, reAskFor } from "./phrasing";
 import { createDraft, deleteDraft, getDraft, saveDraft, type DraftPatch } from "./store";
 import { createCompletion, knownEventSlugs, teamIdBySlug } from "@/lib/queries";
 import { clientQuestions, score, QUESTION_COUNT } from "@/lib/scoring";
@@ -184,6 +184,10 @@ async function converse(
 
   let next = state;
   let lastReply: string;
+  // Set when a typed reply could not be read at all. The re-ask must say so — an identical
+  // question preceded by "noted" reads as a broken loop, which is exactly how it failed in
+  // the first live test.
+  let missed = false;
 
   if (input.tapped !== undefined) {
     // A tap is a statement, not evidence to be interpreted. It never goes near the extractor
@@ -231,6 +235,7 @@ async function converse(
     // Nothing heard: apply nothing. The slot stays unfilled, so the controller asks the same
     // question again on the line below — a re-ask costs a turn, and guessing costs the
     // archetype. The budget bounds how many times this can happen.
+    if (!hit) missed = true;
   }
 
   const move = nextMove(next);
@@ -248,17 +253,17 @@ async function converse(
   const text =
     move.kind === "confirm"
       ? narrowingAsk(move.text, move.options, move.value)
-      : await phrase(move.text, lastReply || null);
+      : await phrase(move.text, lastReply || null, missed);
 
   const committed = commitMove(next, move);
   transcript.push({ role: "agent", text, questionIndex: move.questionIndex, kind: move.kind, at: nowIso() });
 
   await persist(draft.id, { answers: answersOf(committed), transcript, provenance, turn: committed.turn });
 
-  return {
-    status: "continue",
-    ask: agentTurn(text, move.questionIndex, move.kind, move.options, committed),
-  };
+  const ask = agentTurn(text, move.questionIndex, move.kind, move.options, committed);
+  // A re-ask reveals the options in the UI. Someone whose answer just missed is precisely
+  // who needs the floor put in front of them rather than tucked behind a disclosure.
+  return { status: "continue", ask: missed ? { ...ask, retry: true } : ask };
 }
 
 /**
@@ -465,9 +470,9 @@ async function persist(id: string, patch: DraftPatch): Promise<void> {
  * question when the model refuses or paraphrases; this extends the same treatment to an
  * outage. The question is the instrument, the acknowledgement is manners.
  */
-async function phrase(questionText: string, lastReply: string | null): Promise<string> {
+async function phrase(questionText: string, lastReply: string | null, missed = false): Promise<string> {
   try {
-    const { text } = await askFor(questionText, lastReply);
+    const { text } = missed && lastReply ? await reAskFor(questionText, lastReply) : await askFor(questionText, lastReply);
     return text;
   } catch (error) {
     // Never log the reply — it is the person's own words. The message alone is enough to see

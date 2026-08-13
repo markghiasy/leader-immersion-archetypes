@@ -113,6 +113,12 @@ export type AgentTurn = {
   options: string[];
   /** 0-1, for an unlabelled progress bar. Never render this as "N of 25". */
   progress: number;
+  /**
+   * True when this turn re-asks a question because the last answer could not be read.
+   * The UI reveals the options automatically: someone whose answer just missed is exactly
+   * who needs the floor put in front of them rather than hidden behind a disclosure.
+   */
+  retry?: boolean;
 };
 
 export type TurnResponse =

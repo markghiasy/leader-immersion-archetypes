@@ -86,3 +86,49 @@ export function narrowingAsk(questionText: string, options: string[], heard: num
     `?`
   );
 }
+
+const REASK_SYSTEM = `You are interviewing someone about how they lead. Their last answer was too vague to match any of the options, so you need to ask the same question again.
+
+Write the interviewer's next turn. It has two parts:
+1. One short, warm sentence saying you need a bit more — reference what they actually said. Never imply you recorded their answer. Never say "noted", "got it", "thanks" or anything that sounds like it landed.
+2. The question, reproduced EXACTLY as given, word for word.
+
+Rules:
+- Never reword the question. Copy it exactly.
+- Do not apologise or blame them; this is a normal part of a conversation.
+- Invite a bit more detail, or point out they can pick an option instead.
+- Under 45 words total. Write like a person.`;
+
+/**
+ * The turn after an answer that could not be read. Separate from `askFor` because the
+ * generic prompt has no idea extraction failed and will cheerfully imply it succeeded —
+ * which is what makes an identical re-ask look like a bug rather than a conversation.
+ */
+export async function reAskFor(
+  questionText: string,
+  lastReply: string,
+  config: PhrasingConfig = DEFAULT_PHRASING,
+  client = new Anthropic(),
+): Promise<PhrasedAsk> {
+  const response = await client.messages.create({
+    model: config.model,
+    max_tokens: 500,
+    system: REASK_SYSTEM,
+    output_config: { effort: config.effort },
+    messages: [
+      {
+        role: "user",
+        content: `They said:\n"""\n${lastReply}\n"""\n\nThat was too vague to match an option. Ask again, exactly:\n"""\n${questionText}\n"""`,
+      },
+    ],
+  });
+  if (response.stop_reason === "refusal") {
+    return { text: `I need a little more to go on there. ${questionText}`, verbatimPreserved: true };
+  }
+  const block = response.content.find((b) => b.type === "text");
+  const text = block && block.type === "text" ? block.text.trim() : "";
+  if (!text.includes(questionText)) {
+    return { text: `I need a little more to go on there. ${questionText}`, verbatimPreserved: false };
+  }
+  return { text, verbatimPreserved: true };
+}
