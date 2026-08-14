@@ -288,3 +288,51 @@
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
 }
+
+/* --- Answer chips -----------------------------------------------------
+ * Shown under the agent turn that is re-asking, when the last answer could not be read.
+ * Full option text, never truncated: a shortened chip would change what the person is
+ * choosing, and these are the instrument.
+ * ------------------------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  max-width: 90%;
+}
+
+.chip {
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.chip:hover:not(:disabled) {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 30rem) {
+  .chips {
+    max-width: 100%;
+  }
+  /* One per line on a phone: these are sentences, not one-word tags, and a wrapped
+     two-column grid of them is unreadable at 375px. */
+  .chip {
+    width: 100%;
+  }
+}

@@ -142,7 +142,9 @@ export default function InterviewChat({
   // person who has just demonstrated they need it is how a conversation becomes a dead end.
   // Derivation beats a state-setting effect here — no cascading render, no stale flag when
   // the next turn lands.
-  const showOptions = optionsOpen || ask?.retry === true;
+  // The disclosure is for someone who chooses to look. On a re-ask the chips already sit in
+  // the thread, so opening this as well would show the same four options twice.
+  const showOptions = optionsOpen;
   const [fallback, setFallback] = useState<FallbackQuestion[] | null>(null);
   const [fallbackAnswers, setFallbackAnswers] = useState<Record<number, number>>({});
 
@@ -450,6 +452,25 @@ export default function InterviewChat({
               <span className="sr-only">{turn.role === "agent" ? "Interviewer said: " : "You said: "}</span>
               {turn.text}
             </div>
+
+            {/* The answer chips ride under the agent turn that re-asked, and only that one:
+                once the person has moved on, a stale row of chips would invite them to
+                answer a question that is no longer on screen. */}
+            {turn.role === "agent" && i === lastAgentIndex && ask?.retry && !pending && (
+              <div className={styles.chips} role="group" aria-label="Or choose the closest answer">
+                {ask.options.map((option, optionIndex) => (
+                  <button
+                    key={optionIndex}
+                    type="button"
+                    className={styles.chip}
+                    onClick={() => sendTap(optionIndex)}
+                    disabled={pending}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
           </li>
         ))}
 
