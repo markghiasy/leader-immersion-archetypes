@@ -1,11 +1,16 @@
 /* The chat surface. Every value resolves through a token in theme.css; the handful of
    raw lengths below are shape values with no token (bubble width, dot size). */
 
+/* Fills its parent rather than claiming a fixed slice of the viewport. It was min-height:
+   70svh, which anchored the composer at 70% of the screen and left the bottom third empty —
+   sticky cannot correct that, because with a short thread there is nothing to scroll.
+   flex: 1 with min-height: 0 lets the thread take every pixel the composer does not. */
 .shell {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  min-height: 70svh;
+  flex: 1;
+  min-height: 0;
   padding-top: var(--space-4);
 }
 

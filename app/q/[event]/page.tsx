@@ -27,7 +27,9 @@ export default async function EventEntryPage({ params }: { params: Promise<{ eve
   return (
     <div className="page">
       <BrandHeader />
-      <main className="container">
+      {/* container-fill, not plain container: the interview is a full-height app screen, and
+          its composer must sit at the bottom of the viewport rather than under the thread. */}
+      <main className="container container-fill">
         {/* The interview is the primary journey; the tap form survives inside it as the
             in-turn escape hatch and the turn-budget fallback. */}
         <InterviewChat event={eventSlug} intro={<EntryHero />} />

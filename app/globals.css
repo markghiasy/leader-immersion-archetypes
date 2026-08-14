@@ -88,6 +88,18 @@ select {
   max-width: var(--content-width-wide);
 }
 
+/* Fills the remaining page height and lets its child do the same, so a bottom-anchored
+   composer sits at the bottom of the SCREEN rather than at the bottom of its content.
+   Without this the interview's shell ended wherever its content ended and left dead space
+   beneath it — worst on the first few questions, when the thread is shortest. */
+.container-fill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: var(--space-3);
+}
+
 .stack {
   display: flex;
   flex-direction: column;
