@@ -310,20 +310,36 @@
   max-width: 90%;
 }
 
+/* Deliberately quieter than a control. These appear only after an answer did not land, and
+   typing is still the real journey — a row of solid buttons reads as "stop typing, tap
+   instead". Greyscale, italic and a size down says "suggestion, if you want it".
+
+   The type shrinks; the TAP TARGET DOES NOT. min-height holds it at 44px, because a chip
+   being visually quieter must not make it physically harder to hit on a phone.
+   --color-text-muted is #5c5c5c, ~7:1 on the surface, so this stays well inside AA. */
 .chip {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
   padding: var(--space-2) var(--space-4);
-  border: var(--border-width) solid var(--color-border-strong);
+  border: var(--border-width) dashed var(--color-border);
   border-radius: var(--radius-pill);
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--text-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-style: italic;
   text-align: left;
   cursor: pointer;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
-.chip:hover:not(:disabled) {
+/* On intent it stops apologising and behaves like the control it actually is. Italic is
+   kept through the transition: swapping to roman would reflow the label under the finger. */
+.chip:hover:not(:disabled),
+.chip:active:not(:disabled) {
   background: var(--color-accent);
+  border-style: solid;
   border-color: var(--color-accent);
   color: var(--color-on-accent);
 }
