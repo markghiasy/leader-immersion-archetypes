@@ -15,6 +15,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#ffffff",
+  // Ask the browser to shrink the layout viewport when the soft keyboard opens, rather than
+  // letting the keyboard sit over the page. Chrome on Android honours this; iOS Safari does
+  // not, which is why InterviewChat also measures the overlap via visualViewport.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

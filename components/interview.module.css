@@ -141,7 +141,11 @@
 
 .composer {
   position: sticky;
-  bottom: 0;
+  /* Lifted clear of the soft keyboard. --keyboard-inset is published by InterviewChat from
+     visualViewport and is 0 wherever the browser resizes the viewport itself (Android). On
+     iOS, where the keyboard overlays the page, this is what keeps the composer reachable
+     without scrolling. */
+  bottom: var(--keyboard-inset, 0px);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);

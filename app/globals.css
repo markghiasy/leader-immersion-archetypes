@@ -10,6 +10,10 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* Keep scrollIntoView from parking content underneath the sticky composer, and underneath
+     the soft keyboard on iOS where it overlays the page instead of resizing it.
+     --keyboard-inset is published by InterviewChat; it is 0 everywhere else. */
+  scroll-padding-bottom: calc(var(--keyboard-inset, 0px) + 9rem);
 }
 
 body {

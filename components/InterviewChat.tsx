@@ -170,6 +170,34 @@ export default function InterviewChat({
     if (phase === "contact") headingRef.current?.focus();
   }, [phase]);
 
+  // How much of the layout viewport the soft keyboard is covering, published as a CSS
+  // variable so the composer can sit above it.
+  //
+  // This exists because the two platforms disagree. Android Chrome RESIZES the layout
+  // viewport when the keyboard opens, so a composer stuck to bottom: 0 lands above it and
+  // everything works. iOS Safari OVERLAYS the keyboard and leaves the layout viewport at
+  // full height — so bottom: 0 is underneath the keyboard, and the person has to keep
+  // scrolling to reach what they are typing and the end of the conversation. visualViewport
+  // is the only thing that reports the real visible area; on Android it reports no overlap,
+  // so this is one mechanism serving both rather than a branch on user agent.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement;
+    const update = () => {
+      const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      root.style.setProperty("--keyboard-inset", `${Math.round(overlap)}px`);
+    };
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      root.style.removeProperty("--keyboard-inset");
+    };
+  }, []);
+
   // STEP 1 — while the agent is working, anchor on the thinking indicator and hold.
   //
   // Sending appends the person's bubble and the indicator below the fold, and previously
