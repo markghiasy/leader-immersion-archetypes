@@ -8,10 +8,15 @@ import type { ClientQuestion } from "@/lib/scoring";
 import { contactSchema, fieldErrors } from "@/lib/validation";
 import quiz from "./quiz.module.css";
 import styles from "./interview.module.css";
+import ViewportDebug from "./ViewportDebug";
 
 /** Layout effect on the client, plain effect on the server — the scroll must run before
  *  paint, and calling useLayoutEffect during SSR only earns a warning. */
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+/** Below this, a visual/layout viewport difference is browser chrome settling, not a
+ *  keyboard. The shortest soft keyboards are still ~200px. */
+const KEYBOARD_MIN_INSET = 120;
 
 /**
  * The conversational intake, client side.
@@ -187,15 +192,21 @@ export default function InterviewChat({
     if (!vv) return;
     const root = document.documentElement;
     const update = () => {
-      const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      root.style.setProperty("--keyboard-inset", `${Math.round(overlap)}px`);
+      const overlap = window.innerHeight - vv.height - vv.offsetTop;
+      // Only a keyboard counts. On Android the URL bar collapsing changes innerHeight and
+      // visualViewport.height at slightly different moments, so a raw difference is nonzero
+      // for a frame or two on ORDINARY SCROLLING — which moved the composer and shifted the
+      // scroll anchor while the person was reading. A soft keyboard is never this small;
+      // anything under the threshold is chrome settling and must be ignored.
+      const inset = overlap > KEYBOARD_MIN_INSET ? Math.round(overlap) : 0;
+      root.style.setProperty("--keyboard-inset", `${inset}px`);
     };
     update();
+    // resize only. `scroll` on visualViewport fires continuously while the page scrolls,
+    // which is exactly when this must not be recomputed.
     vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
     return () => {
       vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
       root.style.removeProperty("--keyboard-inset");
     };
   }, []);
@@ -512,6 +523,7 @@ export default function InterviewChat({
 
   return (
     <div className={styles.shell}>
+      <ViewportDebug />
       <div
         className={styles.progressTrack}
         role="progressbar"
