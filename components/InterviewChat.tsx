@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { INTERVIEW_LIMITS } from "@/lib/interview/contract";
 import type { AgentTurn, ApiError, StartResponse, TurnResponse } from "@/lib/interview/contract";
@@ -8,6 +8,10 @@ import type { ClientQuestion } from "@/lib/scoring";
 import { contactSchema, fieldErrors } from "@/lib/validation";
 import quiz from "./quiz.module.css";
 import styles from "./interview.module.css";
+
+/** Layout effect on the client, plain effect on the server — the scroll must run before
+ *  paint, and calling useLayoutEffect during SSR only earns a warning. */
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 /**
  * The conversational intake, client side.
@@ -150,6 +154,7 @@ export default function InterviewChat({
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const agentTurnRef = useRef<HTMLDivElement>(null);
+  const typingRef = useRef<HTMLLIElement>(null);
 
   // Index of the newest agent turn: focus follows it, so keyboard and screen reader users
   // land on the question rather than having to hunt back up the thread for it.
@@ -165,7 +170,19 @@ export default function InterviewChat({
     if (phase === "contact") headingRef.current?.focus();
   }, [phase]);
 
-  useEffect(() => {
+  // STEP 1 — while the agent is working, anchor on the thinking indicator and hold.
+  //
+  // Sending appends the person's bubble and the indicator below the fold, and previously
+  // nothing moved: for three to five seconds the screen looked inert, and then the view
+  // jumped when the answer landed. Anchoring here means the wait is visible where it
+  // happens, and the only scroll that follows is step 2.
+  useIsomorphicLayoutEffect(() => {
+    if (!pending) return;
+    typingRef.current?.scrollIntoView({ block: "end", behavior: "auto" });
+  }, [pending]);
+
+  // STEP 2 — the answer has landed; settle once, before paint.
+  useIsomorphicLayoutEffect(() => {
     if (lastAgentIndex < 0) return;
     const bubble = agentTurnRef.current;
     if (!bubble) return;
@@ -186,7 +203,13 @@ export default function InterviewChat({
     // Top-aligning the question keeps it on screen and puts the chips directly beneath it,
     // so anything that overflows is reached by scrolling DOWN, which is the direction people
     // already reach for.
-    bubble.scrollIntoView({ block: "start", behavior: "smooth" });
+    //
+    // Instant, not smooth. A smooth scroll animates for several hundred milliseconds, is
+    // cancelled by any touch, and leaves the person parked wherever the interruption caught
+    // it — the failure looks like the app losing its place. Running before paint in a layout
+    // effect means there is no intermediate position to see, so instant reads as "the next
+    // question is simply there" rather than as a jump.
+    bubble.scrollIntoView({ block: "start", behavior: "auto" });
   }, [lastAgentIndex, ask]);
 
   const finish = useCallback(
@@ -502,7 +525,7 @@ export default function InterviewChat({
         ))}
 
         {pending && (
-          <li className={styles.agentRow}>
+          <li ref={typingRef} className={styles.agentRow}>
             <div className={styles.typing}>
               <span className="sr-only">Thinking…</span>
               <span className={styles.dot} aria-hidden="true" />
