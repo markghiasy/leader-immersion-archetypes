@@ -8,6 +8,10 @@ their own. That loop is the point of the product, not a feature bolted on the si
 
 Built for 100–1000 people finishing the quiz at once, on phones.
 
+> **Testing or auditing this?** Read **[docs/PRODUCTION.md](docs/PRODUCTION.md)** first. It
+> records what production actually is, and which findings from a laptop do not transfer to
+> it — rate limiting, pooling, latency and 429s all behave differently there.
+
 ## Contents
 
 - [Quick start](#quick-start)

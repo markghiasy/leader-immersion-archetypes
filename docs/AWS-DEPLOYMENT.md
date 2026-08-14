@@ -132,8 +132,11 @@ The QR code should point at `https://<subdomain>/q/<event-slug>`.
 The app currently runs on a temporary host while AWS is built. Two things do **not** carry
 across by themselves.
 
-**Data.** The schema is three tables and the dataset is small, so a plain dump and restore
-is the whole job:
+**Data.** The schema is four tables and the dataset is small, so a plain dump and restore
+is the whole job. `interview_drafts` is deliberately **not** carried across: it holds
+in-flight interviews only, and anyone mid-interview during a cutover has to start again.
+Note that it does contain name, email and mobile — so it is dropped, not migrated, and the
+old database should be destroyed rather than left idle:
 
 ```bash
 pg_dump --no-owner --no-acl --data-only \
@@ -158,8 +161,11 @@ truncate and start clean instead — see below.
 **Starting clean** (safe to run before a real event, and the safer default):
 
 ```sql
-TRUNCATE TABLE responses, teams RESTART IDENTITY CASCADE;
+TRUNCATE TABLE responses, teams, interview_drafts RESTART IDENTITY CASCADE;
 ```
+
+`interview_drafts` is included because abandoned drafts retain name, email and mobile
+indefinitely — `sweepExpiredDrafts()` still has no caller, so nothing else clears them.
 
 ⚠️ Do **not** include `events` in that statement. The event row is what makes
 `/q/<slug>` attribute completions to the event; without it the quiz still works and every
@@ -202,6 +208,10 @@ a cold start pays the Node boot.
   want a real limit across tasks, put it on the ALB or WAF.
 - The database holds **personal data** — name, email, mobile, company. Encrypt the RDS
   volume, keep it in a private subnet, and set a retention policy for backups.
+- ⚠️ `interview_drafts` holds the same personal data for interviews that were *never
+  finished*, and **nothing currently deletes it**: `sweepExpiredDrafts()` exists but has no
+  caller. Schedule it (ECS scheduled task or equivalent) and cut the TTL from 48h to ~8h
+  before the database holds real attendees.
 
 ## What is host-specific and what is not
 
