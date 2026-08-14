@@ -272,6 +272,13 @@ export default function InterviewChat({
       setError(null);
       setAttempt(next);
       setReply("");
+      // Collapse the tap-out on every answer, however it was given.
+      //
+      // Left open it stays open for every question that follows, which quietly converts the
+      // interview into a tap form with a text box attached — and the options being on screen
+      // before the person has answered in their own words is exactly what changes the answer.
+      // The disclosure is a per-question escape hatch: always one press away, never latched.
+      setOptionsOpen(false);
       setTurns((t) => [...t, { role: "person", text: next.personText }]);
       setPending(true);
       try {
