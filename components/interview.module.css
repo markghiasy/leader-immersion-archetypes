@@ -48,7 +48,11 @@
 }
 
 .agentRow {
-  justify-content: flex-start;
+  /* Column, not row: the answer chips are a second child of this list item and must stack
+     UNDER the message, not beside it. Left as a row they became a sibling column, squeezing
+     the agent bubble to a sliver and overlapping its border. */
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .personRow {
@@ -335,4 +339,14 @@
   .chip {
     width: 100%;
   }
+}
+
+/* Zero-height anchor marking the true bottom of the thread, so scrolling brings the last
+   turn AND anything attached to it (answer chips) into view rather than stopping at the
+   message bubble. */
+.threadEnd {
+  height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }

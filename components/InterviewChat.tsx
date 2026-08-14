@@ -150,6 +150,7 @@ export default function InterviewChat({
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const agentTurnRef = useRef<HTMLDivElement>(null);
+  const threadEndRef = useRef<HTMLLIElement>(null);
 
   // Index of the newest agent turn: focus follows it, so keyboard and screen reader users
   // land on the question rather than having to hunt back up the thread for it.
@@ -166,8 +167,14 @@ export default function InterviewChat({
   }, [phase]);
 
   useEffect(() => {
-    if (lastAgentIndex >= 0) agentTurnRef.current?.focus();
-  }, [lastAgentIndex]);
+    if (lastAgentIndex < 0) return;
+    // Focus first, so a keyboard or screen-reader user lands on the question…
+    agentTurnRef.current?.focus();
+    // …then bring the true bottom into view. Focus alone scrolls the bubble into view and
+    // stops there, which clipped the answer chips rendered beneath it — the person saw two
+    // of four options and nothing to suggest the others existed.
+    threadEndRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [lastAgentIndex, ask]);
 
   const finish = useCallback(
     async (resultId: string) => {
@@ -484,6 +491,9 @@ export default function InterviewChat({
             </div>
           </li>
         )}
+        {/* Scroll anchor: the real bottom of the conversation, including whatever is
+            attached to the last turn. */}
+        <li ref={threadEndRef} aria-hidden="true" className={styles.threadEnd} />
       </ol>
 
       {error && (
