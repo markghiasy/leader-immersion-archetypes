@@ -614,14 +614,13 @@ export default function InterviewChat({
             />
             <button
               type="button"
-              className="button"
+              className="button button-block"
               onClick={sendTyped}
               disabled={pending || !ask || reply.trim().length === 0}
             >
               Send
             </button>
           </div>
-          <p className="muted xs">Press Enter to send, Shift + Enter for a new line.</p>
         </div>
       )}
     </div>

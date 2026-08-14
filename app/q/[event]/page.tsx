@@ -1,5 +1,5 @@
 import InterviewChat from "@/components/InterviewChat";
-import { BrandFooter, BrandHeader } from "@/components/Brand";
+import { BrandHeader } from "@/components/Brand";
 import { EntryHero } from "@/components/EntryHero";
 import { eventSlugSchema } from "@/lib/validation";
 
@@ -32,7 +32,10 @@ export default async function EventEntryPage({ params }: { params: Promise<{ eve
             in-turn escape hatch and the turn-budget fallback. */}
         <InterviewChat event={eventSlug} intro={<EntryHero />} />
       </main>
-      <BrandFooter />
+      {/* No footer on the interview screen. This is the one page where vertical space is
+          scarce — a 25-turn thread, a sticky composer and a soft keyboard — and the wordmark
+          is already in the header. It stays on the scorecard and roster, which are the pages
+          people actually share. */}
     </div>
   );
 }
