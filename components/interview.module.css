@@ -77,6 +77,9 @@
   border: var(--border-width) solid var(--color-border);
   border-bottom-left-radius: var(--radius-sm);
   box-shadow: var(--shadow-sm);
+  /* A new question is scrolled to the top of the viewport; the progress track is sticky at
+     top: 0, so leave it room rather than letting it sit over the first line of the question. */
+  scroll-margin-top: var(--space-3);
 }
 
 .personBubble {

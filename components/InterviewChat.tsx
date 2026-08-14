@@ -150,7 +150,6 @@ export default function InterviewChat({
 
   const headingRef = useRef<HTMLHeadingElement>(null);
   const agentTurnRef = useRef<HTMLDivElement>(null);
-  const threadEndRef = useRef<HTMLLIElement>(null);
 
   // Index of the newest agent turn: focus follows it, so keyboard and screen reader users
   // land on the question rather than having to hunt back up the thread for it.
@@ -168,12 +167,26 @@ export default function InterviewChat({
 
   useEffect(() => {
     if (lastAgentIndex < 0) return;
-    // Focus first, so a keyboard or screen-reader user lands on the question…
-    agentTurnRef.current?.focus();
-    // …then bring the true bottom into view. Focus alone scrolls the bubble into view and
-    // stops there, which clipped the answer chips rendered beneath it — the person saw two
-    // of four options and nothing to suggest the others existed.
-    threadEndRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    const bubble = agentTurnRef.current;
+    if (!bubble) return;
+
+    // Focus so a keyboard or screen-reader user lands on the question — but WITHOUT its
+    // default scroll, which raced the explicit one below and showed as a visible re-centre.
+    bubble.focus({ preventScroll: true });
+
+    // Put the QUESTION at the top of the viewport.
+    //
+    // This previously scrolled a zero-height anchor at the bottom of the thread with
+    // `block: "end"`, to stop the answer chips beneath the bubble being clipped. That holds
+    // on a desktop window tall enough for the question and its chips together. On a phone —
+    // shorter again once the soft keyboard opens, and with a sticky composer taking the
+    // bottom — it aligned the thread's bottom edge to the fold and pushed the question off
+    // the top, leaving the person scrolling UP to find what they were being asked.
+    //
+    // Top-aligning the question keeps it on screen and puts the chips directly beneath it,
+    // so anything that overflows is reached by scrolling DOWN, which is the direction people
+    // already reach for.
+    bubble.scrollIntoView({ block: "start", behavior: "smooth" });
   }, [lastAgentIndex, ask]);
 
   const finish = useCallback(
@@ -491,9 +504,9 @@ export default function InterviewChat({
             </div>
           </li>
         )}
-        {/* Scroll anchor: the real bottom of the conversation, including whatever is
-            attached to the last turn. */}
-        <li ref={threadEndRef} aria-hidden="true" className={styles.threadEnd} />
+        {/* Bottom clearance, so the last answer chip is never flush against the thread's
+            edge — a half-clipped option reads as "that's all of them". */}
+        <li aria-hidden="true" className={styles.threadEnd} />
       </ol>
 
       {error && (
