@@ -344,8 +344,10 @@
 /* Zero-height anchor marking the true bottom of the thread, so scrolling brings the last
    turn AND anything attached to it (answer chips) into view rather than stopping at the
    message bubble. */
+/* Enough clearance that the last chip is never flush against the thread's bottom edge —
+   a half-clipped option reads as "that's all of them". */
 .threadEnd {
-  height: 0;
+  height: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
