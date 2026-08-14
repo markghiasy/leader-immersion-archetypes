@@ -126,7 +126,7 @@ async function runOne(style: Style, index: number): Promise<Result> {
       event: "melbourne-aug",
     });
 
-    let draftId = start.draftId;
+    const draftId = start.draftId;
     let ask: Ask = start.ask;
 
     // Bounded well above the 40-turn budget: the server stops us, this only stops a bug.

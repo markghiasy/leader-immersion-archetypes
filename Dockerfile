@@ -20,6 +20,17 @@ ENV BUILD_STANDALONE=1
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
+# The migrator has to travel in the image so the one-off migrate task runs from the very
+# same artefact that serves traffic. It cannot simply be copied: `scripts/` is TypeScript,
+# `tsx` is a devDependency, and Next inlines `drizzle-orm` into the server chunks rather
+# than leaving it in the standalone `node_modules`. So bundle it to a single CommonJS file
+# with its dependencies inlined. `pg` stays external — the standalone output does ship it.
+# CJS, not ESM: drizzle's migrator and dotenv `require()` internally, which an ESM bundle
+# cannot satisfy.
+RUN npx esbuild scripts/migrate.ts \
+      --bundle --platform=node --format=cjs \
+      --outfile=migrate.cjs --external:pg
+
 # ---------- runtime ----------
 FROM node:22-alpine AS runtime
 WORKDIR /app
@@ -36,9 +47,11 @@ COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
 # Migrations and the frozen inputs travel with the image so a one-off migrate task can
-# run from the very same artefact that serves traffic.
+# run from the very same artefact that serves traffic. `drizzle/` must sit at the working
+# directory: the migrator resolves `./drizzle/meta/_journal.json` relative to CWD.
 COPY --from=build --chown=nextjs:nodejs /app/drizzle ./drizzle
 COPY --from=build --chown=nextjs:nodejs /app/inputs ./inputs
+COPY --from=build --chown=nextjs:nodejs /app/migrate.cjs ./migrate.cjs
 
 USER nextjs
 EXPOSE 3000

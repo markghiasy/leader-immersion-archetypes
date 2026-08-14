@@ -49,6 +49,19 @@ Five, and only five:
 **Pending before Monday:** the Anthropic key rotates from a personal key to a business
 account key. Rate-limit headroom is a property of the key, not the app — see below.
 
+### `BASE_URL` is gated at boot
+
+`instrumentation.ts` refuses to start the server when `BASE_URL` (or `VERCEL_URL`) and
+`DATABASE_URL` are missing in production, and `baseUrl()` throws rather than returning its
+localhost fallback. Before this gate existed, an unset `BASE_URL` was silent: every
+scorecard URL, invite link, QR target and email button would point at
+`http://localhost:3000` while the app rendered perfectly and health checks passed.
+
+Note the failure shape, because it decides how the load balancer must be configured: a
+container failing the gate **still binds its port**. Next logs `Failed to prepare server`
+and serves `500` to everything. Measured: **TCP connect succeeds; `/api/health` and every
+page return 500.** Probe over HTTP, never TCP.
+
 ## Findings that do NOT transfer from a laptop
 
 Treat all of these as unverified until measured against the deployed container.

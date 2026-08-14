@@ -83,10 +83,13 @@ GRANT CONNECT ON DATABASE quiz TO quiz_app;
 GRANT USAGE, CREATE ON SCHEMA public TO quiz_app;
 
 # 2. Apply migrations — a one-off task, from the same image, BEFORE the new version serves.
+#    `migrate.cjs` is bundled into the image at build time (see Dockerfile). Do not try to
+#    run scripts/migrate.ts here: `scripts/` is not in the runtime image and `tsx` is a
+#    devDependency, so it is absent from the standalone node_modules.
 docker run --rm --env-file .env.production leader-archetype-quiz \
-  node_modules/.bin/tsx scripts/migrate.ts
+  node migrate.cjs
 #   on ECS: aws ecs run-task … --overrides '{"containerOverrides":[{"name":"app",
-#           "command":["node_modules/.bin/tsx","scripts/migrate.ts"]}]}'
+#           "command":["node","migrate.cjs"]}]}'
 
 # 3. Create the event row whose slug the QR code points at.
 INSERT INTO events (slug, name) VALUES ('melbourne-aug', 'Melbourne — August');
@@ -180,6 +183,14 @@ response is silently stored with no event attached.
 
 Use the shallow one for the load balancer. If the ALB probes the deep one, a brief database
 blip will cause it to kill and replace every healthy task at once.
+
+⚠️ **The target group must probe over HTTP, never TCP.** A container that fails the boot
+gate in `instrumentation.ts` — an unset `BASE_URL`, for instance — still binds its port and
+stays alive; Next reports `Failed to prepare server` and then serves `500` to everything.
+Measured against a deliberately misconfigured container: **TCP connect succeeds, while
+`/api/health` and every page return 500.** A TCP health check therefore marks a completely
+broken task as healthy and sends the room to it. The container's own `HEALTHCHECK` already
+uses HTTP; the ALB target group is configured separately and must match.
 
 ## Scaling for an event
 

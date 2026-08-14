@@ -19,6 +19,8 @@
 
 # production
 /build
+# Bundled migrator, generated into the image by the Dockerfile build stage. Never committed.
+/migrate.cjs
 
 # misc
 .DS_Store
