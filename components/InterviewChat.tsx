@@ -580,7 +580,7 @@ export default function InterviewChat({
               rows={2}
               value={reply}
               maxLength={INTERVIEW_LIMITS.maxReplyChars}
-              placeholder="Answer in your own words…"
+              placeholder="Answer in a sentence or two…"
               disabled={pending || !ask}
               onChange={(e) => setReply(e.target.value)}
               onKeyDown={(e) => {

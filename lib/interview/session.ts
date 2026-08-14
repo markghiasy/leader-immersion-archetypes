@@ -54,6 +54,20 @@ import { clientQuestions, score, QUESTION_COUNT } from "@/lib/scoring";
  */
 const CONFIRM_THRESHOLD = 0.75;
 
+/**
+ * What the person reads immediately before typing their first answer — the highest-leverage
+ * place to set the expectation, and the reason the first live tests failed: nobody had told
+ * the tester what a usable answer looks like, so they wrote "with enthusiasm".
+ *
+ * Fixed text, deliberately not generated. This is the contract with the person: it must not
+ * drift between runs, and a model must never be able to paraphrase it into promising less.
+ * The first question follows it verbatim, as on every other turn.
+ */
+const OPENING_FRAME =
+  "I'll ask you 25 questions about how you lead, one at a time. Answer in a sentence or " +
+  "two — the more specific you are, the sharper your scorecard. If I need more, I'll say " +
+  "so and show you some options to pick from.";
+
 /* ------------------------------------------------------------------ *
  * Configuration
  * ------------------------------------------------------------------ */
@@ -115,7 +129,7 @@ export async function startInterview(input: StartRequest): Promise<StartResponse
   // Phrase before writing anything. A phrasing failure then costs nobody a draft row holding
   // their name, email and mobile — and the whole point of the draft tier is that an
   // abandoned interview leaves as little PII behind as possible.
-  const text = await phrase(move.text, null);
+  const text = `${OPENING_FRAME}\n\n${move.text}`;
   state = commitMove(state, move);
 
   const draft = await createDraft({ contact: input.contact, eventSlug, teamSlug });
