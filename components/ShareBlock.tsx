@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import QRCode from "qrcode";
+import { useState, useSyncExternalStore } from "react";
 import styles from "./scorecard.module.css";
 
 /**
- * Invite link, copy button, native share sheet and a QR of the same link.
- * Everything renders from the URL prop; no network calls.
+ * Invite link, copy button and the native share sheet. Everything renders from the URL
+ * prop; no network calls.
+ *
+ * No QR here on purpose. This block is read by someone already holding the phone the
+ * scorecard is on, so a QR of their own invite link is a code they cannot scan — the copy
+ * button and the share sheet are what actually move the link to another person.
  */
 export default function ShareBlock({ inviteUrl, ownerFirstName }: { inviteUrl: string; ownerFirstName: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [status, setStatus] = useState<string | null>(null);
   // Read from the browser without a state-setting effect, so the server render (no share
   // sheet) and the client render agree on the first paint.
@@ -18,15 +20,6 @@ export default function ShareBlock({ inviteUrl, ownerFirstName }: { inviteUrl: s
     () => typeof navigator !== "undefined" && typeof navigator.share === "function",
     () => false,
   );
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    // Rendered client-side so the page stays a plain cached HTML document.
-    QRCode.toCanvas(canvas, inviteUrl, { width: 320, margin: 1, errorCorrectionLevel: "M" }).catch(() => {
-      setStatus("The QR code could not be drawn — the link above still works.");
-    });
-  }, [inviteUrl]);
 
   async function copy() {
     try {
@@ -68,10 +61,6 @@ export default function ShareBlock({ inviteUrl, ownerFirstName }: { inviteUrl: s
             Share
           </button>
         )}
-      </div>
-      <div className={styles.qrWrap}>
-        <canvas ref={canvasRef} className={styles.qr} aria-label="QR code for your team invite link" role="img" />
-        <p className="xs muted">Let someone scan this to join your team.</p>
       </div>
       <p className={styles.status} role="status" aria-live="polite">
         {status}

@@ -10,8 +10,10 @@
 }
 
 /* --- progress ---------------------------------------------------------
-   Unlabelled on purpose. The controller picks questions by leverage and may spend a turn
-   confirming rather than asking, so any visible count would be both wrong and dispiriting. */
+   Now labelled "Question N of 25". The original objection — that the controller picks by
+   leverage, so a count would be wrong — no longer applies: session.ts pins ordering to
+   sequential, and the number is read from the question index rather than from settled slots,
+   so it holds steady through a narrowing turn instead of stalling and jumping. */
 
 .progressTrack {
   position: sticky;
@@ -28,6 +30,13 @@
   height: 100%;
   background: var(--color-accent);
   transition: width var(--transition-base);
+}
+
+.progressCount {
+  margin: 0;
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
 }
 
 /* --- thread ----------------------------------------------------------- */

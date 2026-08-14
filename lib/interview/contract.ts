@@ -111,7 +111,12 @@ export type AgentTurn = {
   kind: "ask" | "confirm";
   /** Always sent, so the tap-out escape hatch can render without another round trip. */
   options: string[];
-  /** 0-1, for an unlabelled progress bar. Never render this as "N of 25". */
+  /**
+   * 0-1, driving the progress bar. Do not render this as a count: it measures SETTLED slots,
+   * and a low-confidence answer stays unsettled until a narrowing turn confirms it, so it
+   * moves in jumps. The visible "Question N of 25" is derived from `questionIndex`, which is
+   * monotonic under the sequential ordering the session pins.
+   */
   progress: number;
   /**
    * True when this turn re-asks a question because the last answer could not be read.
@@ -143,6 +148,14 @@ export const INTERVIEW_LIMITS = {
   turnsPerMinute: 30,
   /** A draft older than this is abandoned and may be swept. */
   draftTtlHours: 48,
+  /**
+   * How many questions the interview settles. Duplicated from `QUESTION_COUNT` in
+   * lib/scoring.ts on purpose: this module is imported by the browser, and scoring.ts
+   * carries the option→profile mappings, which must never reach a client bundle. scoring.ts
+   * asserts the two agree at startup, so drift fails loudly rather than silently mislabelling
+   * "Question N of 25".
+   */
+  questionCount: 25,
 } as const;
 
 /**

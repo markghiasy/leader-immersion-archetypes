@@ -27,9 +27,11 @@ const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffec
  *   2. NOTHING THEY TYPED IS EVER LOST. A failed turn rolls the optimistic bubble back and
  *      hands their words back to the textarea, editable, with a retry that re-sends the
  *      exact same payload. Twenty minutes of answers make a dropped reply unforgivable.
- *   3. NO COUNT IS EVER SHOWN. `ask.progress` drives an unlabelled bar. The controller
- *      picks questions by leverage and may confirm as well as ask, so "N of 25" would be
- *      both wrong and discouraging.
+ *   3. THE COUNT IS SHOWN, but not taken from the bar. `ask.progress` drives the bar and
+ *      measures SETTLED slots, which stall and jump as narrowing turns confirm low-confidence
+ *      answers. The visible "Question N of 25" reads `ask.questionIndex`, which is monotonic
+ *      because session.ts pins ordering to sequential, and correctly holds still while a
+ *      narrowing turn settles the question you are already on.
  *
  * Server state lives on the server: the draft is persisted per turn, and this component
  * holds only the draft id, the visible transcript and what is in the input box.
@@ -498,12 +500,18 @@ export default function InterviewChat({
   /* ---------------- the thread ---------------- */
 
   const percent = Math.round((ask?.progress ?? (fallback ? 1 : 0)) * 100);
+  // Numbered from the question being asked, NOT from `progress`. Progress counts settled
+  // slots, and a low-confidence answer stays unsettled until a later narrowing turn confirms
+  // it — so a count drawn from it would sit still for two turns and then jump by two, which
+  // reads as a fault. The interview runs sequentially (session.ts pins ordering), so the
+  // question index is stable, monotonic, and correctly holds steady while a narrowing turn
+  // settles the question you are already on.
+  const questionNumber = ask ? ask.questionIndex + 1 : null;
   const options = ask?.options ?? [];
   const fallbackComplete = fallback ? fallback.every((q) => fallbackAnswers[q.index] !== undefined) : false;
 
   return (
     <div className={styles.shell}>
-      {/* Unlabelled by design: no count, no percentage, no "N of 25". */}
       <div
         className={styles.progressTrack}
         role="progressbar"
@@ -514,6 +522,11 @@ export default function InterviewChat({
       >
         <div className={styles.progressBar} style={{ width: `${percent}%` }} />
       </div>
+      {questionNumber !== null && (
+        <p className={styles.progressCount}>
+          Question {questionNumber} of {INTERVIEW_LIMITS.questionCount}
+        </p>
+      )}
 
       {/* The thread is a polite live region AND focus moves to the newest agent turn. A
           screen reader will hear the question twice, which is the trade we want: the live

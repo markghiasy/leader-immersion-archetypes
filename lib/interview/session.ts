@@ -443,9 +443,16 @@ function agentTurn(
 }
 
 /**
- * Fraction of the 25 that are settled. Deliberately a fraction and not a count: the contract
- * forbids rendering it as "N of 25", because a person who can see how many are left starts
- * answering to finish rather than answering honestly.
+ * Fraction of the 25 that are settled, for the progress bar.
+ *
+ * Still a fraction rather than a count, but no longer because counts are hidden — the UI now
+ * shows "Question N of 25" (Mark's call, 14 Aug, reversing the original decision to withhold
+ * it). The reason it must not BE that count is mechanical: this measures settled slots, and a
+ * low-confidence answer stays unsettled until a later narrowing turn confirms it, so a count
+ * taken from here would stall and then jump. The visible number comes from `questionIndex`.
+ *
+ * The original concern stands and is worth remembering: someone who can see how many remain
+ * may start answering to finish rather than answering honestly.
  */
 function progressOf(state: InterviewState): number {
   return state.slots.filter((slot) => slot.status === "confirmed").length / QUESTION_COUNT;

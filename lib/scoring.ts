@@ -9,6 +9,7 @@
  * This module is pure and has no imports beyond the schema. It never runs on the client.
  */
 import schemaJson from "@/inputs/archetype-schema.json";
+import { INTERVIEW_LIMITS } from "@/lib/interview/contract";
 
 export const PROFILE_COUNT = 8;
 export const QUESTION_COUNT = 25;
@@ -28,6 +29,15 @@ export const testVectors: TestVector[] = schemaJson.test_vectors as TestVector[]
 
 if (questions.length !== QUESTION_COUNT) {
   throw new Error(`archetype-schema.json must contain ${QUESTION_COUNT} questions, found ${questions.length}`);
+}
+
+// The browser cannot import this module — it holds the option→profile mappings — so the
+// client reads the count from INTERVIEW_LIMITS instead. Fail loudly if the two ever drift,
+// rather than quietly telling someone they are on "question 24 of 25" when they are not.
+if (INTERVIEW_LIMITS.questionCount !== QUESTION_COUNT) {
+  throw new Error(
+    `INTERVIEW_LIMITS.questionCount (${INTERVIEW_LIMITS.questionCount}) must equal QUESTION_COUNT (${QUESTION_COUNT}).`,
+  );
 }
 
 /**
