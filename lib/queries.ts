@@ -275,6 +275,8 @@ export type AdminRow = {
   eventSlug: string | null;
   teamId: number | null;
   teamOwnerName: string | null;
+  /** The inviter's archetype, or null for someone who did not arrive through an invite. */
+  ownerProfile: number | null;
   createdAt: Date;
 };
 
@@ -310,6 +312,10 @@ export async function adminResponses(
       teamId: responses.teamId,
       ownerFirstName: joinedOwner.firstName,
       ownerLastName: joinedOwner.lastName,
+      // The inviter's own archetype. Carried so the export answers "who works with whom,
+      // and as what" in one row — the pairing follow-up is built off this, and joining a
+      // member back to their inviter by NAME breaks the moment two inviters share one.
+      ownerProfile: joinedOwner.profile,
       createdAt: responses.createdAt,
     })
     .from(responses)

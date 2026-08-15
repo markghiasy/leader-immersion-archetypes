@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { createTestDb, resetTestDb, teardownTestDb } from "./helpers/test-db";
 import { POST } from "@/app/api/submit/route";
 import { interviewDrafts, responses, teams } from "@/lib/schema";
-import { createInterviewCompletion, getRoster, getScorecard, seedEvent, teamOwnerBySlug, dedupeRoster } from "@/lib/queries";
+import { adminResponses, createInterviewCompletion, getRoster, getScorecard, seedEvent, teamOwnerBySlug, dedupeRoster } from "@/lib/queries";
 import { optionIndexById, QUESTION_COUNT, questions, score, testVectors } from "@/lib/scoring";
 
 let harness: Awaited<ReturnType<typeof createTestDb>>;
@@ -282,5 +282,68 @@ describe("createInterviewCompletion — the interview's atomic completion", () =
 describe("scorecard reads", () => {
   it("returns null for an unknown result id", async () => {
     expect(await getScorecard("zzzzzzzzzzzzzz")).toBeNull();
+  });
+});
+
+describe("adminResponses — the inviter's archetype, for the pairing follow-up", () => {
+  /**
+   * The export is the input to a "how to work with each other" follow-up sent after the
+   * event. That needs BOTH sides of each pairing on one row. Joining a member back to their
+   * inviter by first name breaks the moment two inviters share one, so the inviter's own
+   * archetype is carried explicitly.
+   */
+  async function completeOne(draftId: string, over: { email: string; answers: number[]; teamId: number | null }) {
+    await harness.db.insert(interviewDrafts).values({
+      id: draftId,
+      firstName: "Alex",
+      lastName: "Nguyen",
+      email: over.email,
+      mobile: "0412 345 678",
+      answers: over.answers,
+      turn: QUESTION_COUNT,
+    });
+    return createInterviewCompletion({
+      draftId,
+      contact: contact({ email: over.email }),
+      answers: over.answers,
+      scored: score(over.answers),
+      eventSlug: null,
+      teamId: over.teamId,
+      intakeMode: "interview" as const,
+    });
+  }
+
+  it("carries the inviter's archetype onto the invited member's row", async () => {
+    const owner = await completeOne("draftowner001", {
+      email: "owner@example.com",
+      answers: VECTOR_ANSWERS,
+      teamId: null,
+    });
+    expect(owner).not.toBeNull();
+
+    const [team] = await harness.db.select().from(teams);
+    // A different answer set, so the member's archetype is distinguishable from the owner's.
+    const memberAnswers = VECTOR_ANSWERS.map((a, i) => (i % 3 === 0 ? (a + 1) % 4 : a));
+    await completeOne("draftmember01", {
+      email: "member@example.com",
+      answers: memberAnswers,
+      teamId: team.id,
+    });
+
+    const { rows } = await adminResponses({}, 50, 0);
+    const member = rows.find((r) => r.email === "member@example.com");
+    const ownerRow = rows.find((r) => r.email === "owner@example.com");
+
+    expect(member?.teamId).toBe(team.id);
+    // The whole point: the member's row states who invited them AND what that person is.
+    expect(member?.ownerProfile).toBe(ownerRow?.profile);
+    expect(member?.teamOwnerName).toBe("Alex Nguyen");
+  });
+
+  it("leaves the inviter's archetype null for someone who did not arrive through an invite", async () => {
+    await completeOne("draftdirect01", { email: "direct@example.com", answers: VECTOR_ANSWERS, teamId: null });
+
+    const { rows } = await adminResponses({}, 50, 0);
+    expect(rows.find((r) => r.email === "direct@example.com")?.ownerProfile).toBeNull();
   });
 });

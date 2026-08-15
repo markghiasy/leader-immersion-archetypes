@@ -25,7 +25,10 @@ export async function GET(request: Request) {
     "archetype",
     "source",
     "event_slug",
+    "team_id",
     "invited_by",
+    "invited_by_archetype_number",
+    "invited_by_archetype",
     "completed_at",
   ]);
 
@@ -41,7 +44,11 @@ export async function GET(request: Request) {
       archetypeName(row.profile),
       row.teamId !== null ? "invite" : row.eventSlug ?? "direct",
       row.eventSlug,
+      // team_id groups a team unambiguously; invited_by alone is a first name and collides.
+      row.teamId,
       row.teamOwnerName,
+      row.ownerProfile,
+      row.ownerProfile !== null ? archetypeName(row.ownerProfile) : null,
       row.createdAt.toISOString(),
     ]),
   );
