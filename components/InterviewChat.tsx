@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { INTERVIEW_LIMITS } from "@/lib/interview/contract";
-import type { AgentTurn, ApiError, StartResponse, TurnResponse } from "@/lib/interview/contract";
+import type { AgentTurn, ApiError, ResumeResponse, StartResponse, TurnResponse } from "@/lib/interview/contract";
 import type { ClientQuestion } from "@/lib/scoring";
 import { contactSchema, fieldErrors } from "@/lib/validation";
 import { publicId } from "@/lib/ids";
@@ -184,6 +184,60 @@ export default function InterviewChat({
   useEffect(() => {
     if (phase === "contact") headingRef.current?.focus();
   }, [phase]);
+
+  // Pick an interview back up where it was left.
+  //
+  // The draft id has always been written to sessionStorage — the comment above says it is so
+  // the interview "outlives a backgrounded tab on iOS, an accidental refresh, or a dropped
+  // connection" — but until now nothing read it back and no endpoint could serve it. The
+  // handle was kept and the door was never built: a refresh at question twenty stranded
+  // every answer given, with the draft sitting complete and unreachable until its TTL.
+  //
+  // Runs once, on mount. Any failure is silent and lands on the intro, which is exactly the
+  // behaviour that existed before — resuming can only ever be better than not resuming, and
+  // must never be a new way to fail.
+  useEffect(() => {
+    let cancelled = false;
+    let stored: string | null = null;
+    try {
+      stored = window.sessionStorage.getItem(DRAFT_KEY);
+    } catch {
+      return; // Private browsing refuses storage; nothing to resume from.
+    }
+    if (!stored) return;
+
+    (async () => {
+      try {
+        const response = await fetch(`/api/interview/draft/${encodeURIComponent(stored)}`);
+        if (cancelled) return;
+        if (!response.ok) {
+          // Expired, completed, or never existed — all the same to the person. Drop the
+          // stale handle so the next start is clean.
+          setDraftId(null);
+          return;
+        }
+        const data = (await response.json()) as ResumeResponse;
+        if (cancelled) return;
+
+        // The whole thread, not just the outstanding question: someone coming back needs to
+        // see what they already said, or they cannot tell a resumed interview from a fresh
+        // one that lost their answers.
+        setTurns(data.turns.map((t) => ({ role: t.role, text: t.text })));
+        setDraftId(data.draftId);
+        if (data.fallback) setFallback(data.fallback);
+        else if (data.ask) setAsk(data.ask);
+        setPhase("thread");
+      } catch {
+        if (!cancelled) setDraftId(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Mount only. `setDraftId` is stable and the rest are setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // How much of the layout viewport the soft keyboard is covering, published as a CSS
   // variable so the composer can sit above it.

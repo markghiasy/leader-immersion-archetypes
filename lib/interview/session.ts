@@ -28,6 +28,7 @@ import {
   type StartRequest,
   type StartResponse,
   type TranscriptTurn,
+  type ResumeResponse,
   type TurnRequest,
   type TurnResponse,
 } from "./contract";
@@ -527,16 +528,16 @@ function progressOf(state: InterviewState): number {
 }
 
 function fallbackResponse(remaining: number[]): TurnResponse {
-  return {
-    status: "fallback",
-    remaining,
-    // The client-safe question payload — text and option wording only, never the mappings.
-    questions: remaining.map((index) => ({
-      index,
-      text: clientQuestions[index].text,
-      options: clientQuestions[index].options,
-    })),
-  };
+  return { status: "fallback", remaining, questions: clientQuestionsFor(remaining) };
+}
+
+/** The client-safe question payload — text and option wording only, never the mappings. */
+function clientQuestionsFor(indexes: number[]): { index: number; text: string; options: string[] }[] {
+  return indexes.map((index) => ({
+    index,
+    text: clientQuestions[index].text,
+    options: clientQuestions[index].options,
+  }));
 }
 
 /**
@@ -597,4 +598,56 @@ async function phrase(questionText: string, lastReply: string | null, missed = f
 
 function nowIso(): string {
   return new Date().toISOString();
+}
+
+/* ------------------------------------------------------------------ *
+ * Resume
+ * ------------------------------------------------------------------ */
+
+/**
+ * Rebuild an interview in progress from its draft.
+ *
+ * The draft id has always been written to sessionStorage so that "a 16-20 minute interview
+ * outlives a backgrounded tab on iOS, an accidental refresh, or a dropped connection" — but
+ * nothing ever read it back, and there was no endpoint that could. The handle was kept and
+ * the door was never built, so a refresh at question twenty stranded every answer given: the
+ * draft sat in the database, complete and unreachable, until its TTL expired.
+ *
+ * Everything needed is already persisted, because the transcript is written on every turn
+ * for exactly this kind of replay. The one thing NOT stored is the option list on each agent
+ * turn — it is recomputed from the question index, which is safe because the schema is
+ * frozen and the wording is verbatim by contract.
+ *
+ * `retry` is deliberately not restored. Whether the last turn was a re-ask is not recorded,
+ * and guessing it wrong would either hide the chips from someone who needs them or show a
+ * stale row of options. The tap-out disclosure is one press away on every turn regardless.
+ *
+ * Returns null when there is nothing to resume — expired, completed, or never existed — so
+ * the client can clear its stale handle and open a fresh interview rather than erroring.
+ */
+export async function resumeInterview(draftId: string): Promise<ResumeResponse | null> {
+  const draft = await getDraft(draftId);
+  if (!draft) return null;
+
+  const state = rehydrate(draft);
+
+  // Out of turns before the refresh: the remaining questions belong to the tap form, and
+  // resuming into a conversation the budget can no longer pay for would strand them again.
+  const move = nextMove(state);
+  if (move.kind === "complete") return null;
+  if (move.kind === "fallback") {
+    return { draftId: draft.id, turns: draft.transcript, fallback: clientQuestionsFor(move.remaining) };
+  }
+
+  // The last question actually put to them — not the next one the controller would choose.
+  // Resuming must answer the question on screen when they left, or the reply they are about
+  // to type lands on something they never saw.
+  const shown = [...draft.transcript].reverse().find((t): t is Extract<TranscriptTurn, { role: "agent" }> => t.role === "agent");
+  if (!shown) return null;
+
+  return {
+    draftId: draft.id,
+    turns: draft.transcript,
+    ask: agentTurn(shown.text, shown.questionIndex, shown.kind, clientQuestions[shown.questionIndex].options, state),
+  };
 }

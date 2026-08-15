@@ -149,6 +149,24 @@ export type TurnResponse =
   /** Nothing usable was heard and the turn budget is spent — finish on the tap form. */
   | { status: "fallback"; remaining: number[]; questions: { index: number; text: string; options: string[] }[] };
 
+/**
+ * GET /api/interview/draft/[draftId] — an interview in progress, rebuilt.
+ *
+ * The whole thread comes back, not just the outstanding question: someone returning after a
+ * refresh needs to see what they have already said, or they cannot tell a resumed interview
+ * from a fresh one that has lost their answers.
+ *
+ * `ask` and `fallback` are mutually exclusive — a draft that has spent its turn budget
+ * resumes onto the tap form, because resuming into a conversation it can no longer pay for
+ * would strand the person a second time.
+ */
+export type ResumeResponse = {
+  draftId: string;
+  turns: TranscriptTurn[];
+  ask?: AgentTurn;
+  fallback?: { index: number; text: string; options: string[] }[];
+};
+
 export type ApiError = { error: string; retryable: boolean };
 
 /* ------------------------------------------------------------------ *

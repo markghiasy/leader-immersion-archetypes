@@ -14,6 +14,7 @@ import {
   type TurnResponse,
 } from "@/lib/interview/contract";
 import { getDraft } from "@/lib/interview/store";
+import { resumeInterview } from "@/lib/interview/session";
 import { publicId } from "@/lib/ids";
 import type { Certainty, ExtractionWithQuote } from "@/lib/interview/extractor";
 // The two endpoints under test. `vi.mock` below is hoisted above every import in this file,
@@ -696,5 +697,61 @@ describe("the scorecard email on completion", () => {
     } finally {
       send.mockRestore();
     }
+  });
+});
+
+describe("resuming an interview in progress", () => {
+  /**
+   * The draft id was always kept in sessionStorage so a refresh, a backgrounded tab or a
+   * dropped connection would not cost someone sixteen minutes of answers — but nothing read
+   * it back and no endpoint could serve it. These cover the door that was missing.
+   */
+  it("returns the thread so far and re-asks the question that was on screen", async () => {
+    const { draftId, ask: opening } = await start({});
+
+    // Three answered, the fourth outstanding — the state someone walks away from.
+    let current = opening;
+    for (let i = 0; i < 3; i += 1) {
+      models.extract.mockResolvedValueOnce(heard(current.questionIndex, 1, "explicit"));
+      const next = await turn({ draftId, reply: replyChoosing(current.questionIndex, 1) });
+      if (next.status !== "continue") throw new Error("expected the interview to continue");
+      current = next.ask;
+    }
+
+    const resumed = await resumeInterview(draftId);
+
+    expect(resumed).not.toBeNull();
+    expect(resumed!.draftId).toBe(draftId);
+    // The question re-offered is the one they were looking at, not the next one the
+    // controller would pick — otherwise the reply they type lands on something unseen.
+    expect(resumed!.ask?.questionIndex).toBe(current.questionIndex);
+    expect(resumed!.ask?.text).toBe(current.text);
+    expect(resumed!.ask?.options).toEqual(current.options);
+    // Both sides of every exchange, so a returning person can see what they already said.
+    expect(resumed!.turns.filter((t) => t.role === "person")).toHaveLength(3);
+    expect(resumed!.turns.filter((t) => t.role === "agent")).toHaveLength(4);
+  });
+
+  it("carries on from a resumed draft without losing the answers already settled", async () => {
+    const { draftId, ask: opening } = await start({});
+    models.extract.mockResolvedValueOnce(heard(opening.questionIndex, 2, "explicit"));
+    const second = await turn({ draftId, reply: replyChoosing(opening.questionIndex, 2) });
+    if (second.status !== "continue") throw new Error("expected the interview to continue");
+
+    const resumed = await resumeInterview(draftId);
+    expect(resumed!.ask?.questionIndex).toBe(second.ask.questionIndex);
+
+    // Answering the resumed question advances rather than re-treading.
+    models.extract.mockResolvedValueOnce(heard(second.ask.questionIndex, 0, "explicit"));
+    const third = await turn({ draftId, reply: replyChoosing(second.ask.questionIndex, 0) });
+    if (third.status !== "continue") throw new Error("expected the interview to continue");
+
+    const draft = await readDraft(draftId);
+    expect(draft!.answers[opening.questionIndex]).toBe(2);
+    expect(draft!.answers[second.ask.questionIndex]).toBe(0);
+  });
+
+  it("returns null for a draft that never existed, so the client starts fresh", async () => {
+    expect(await resumeInterview(publicId())).toBeNull();
   });
 });
