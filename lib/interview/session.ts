@@ -43,8 +43,8 @@ import {
 } from "./controller";
 import { extract } from "./extractor";
 import { askFor, narrowingAsk, reAskFor } from "./phrasing";
-import { createDraft, deleteDraft, getDraft, saveDraft, type DraftPatch } from "./store";
-import { createCompletion, knownEventSlugs, teamIdBySlug } from "@/lib/queries";
+import { createDraft, getDraft, saveDraft, type DraftPatch } from "./store";
+import { createInterviewCompletion, knownEventSlugs, teamIdBySlug } from "@/lib/queries";
 import { clientQuestions, score, QUESTION_COUNT } from "@/lib/scoring";
 
 /**
@@ -337,9 +337,9 @@ async function finish(
   provenance: AnswerProvenance[],
   state: InterviewState,
 ): Promise<TurnResponse> {
-  // Save the draft BEFORE the permanent write. If `createCompletion` fails, the twenty-fifth
-  // answer is still on the draft and the next request finishes the job; without this, a
-  // database blip on the last turn would cost somebody the entire interview.
+  // Save the draft BEFORE the permanent write. If `createInterviewCompletion` fails, the
+  // twenty-fifth answer is still on the draft and the next request finishes the job; without
+  // this, a database blip on the last turn would cost somebody the entire interview.
   //
   // A null here means the draft expired between reading it and now. Nothing can be done
   // about that, and it is no reason to withhold a scorecard the person has earned.
@@ -350,7 +350,13 @@ async function finish(
   const scored = score(answers);
   const teamId = draft.teamSlug ? await teamIdBySlug(draft.teamSlug) : null;
 
-  const { resultId } = await createCompletion({
+  // Consumes the draft and writes the response + team in one transaction — see the note on
+  // createInterviewCompletion for why that atomicity is the point. `null` means some other
+  // attempt (most often this same request's own retry, after its first response was lost to
+  // the person's connection) already completed this draft; there is no resultId to recover
+  // here, so this is reported the same way an unrecognised draft is.
+  const result = await createInterviewCompletion({
+    draftId: draft.id,
     contact: draft.contact,
     answers,
     scored,
@@ -359,10 +365,11 @@ async function finish(
     intakeMode: intakeModeOf(state),
   });
 
-  // The permanent record exists, so the working copy of their contact details should not.
-  await deleteDraft(draft.id);
+  if (!result) {
+    throw new InterviewError("draft_not_found", "That interview has already been completed.");
+  }
 
-  return { status: "complete", resultId };
+  return { status: "complete", resultId: result.resultId };
 }
 
 /**
