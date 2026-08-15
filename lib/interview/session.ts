@@ -139,8 +139,10 @@ export async function startInterview(input: StartRequest): Promise<StartResponse
 
   // A second write, because `createDraft` opens an empty draft and the opening turn belongs
   // in the transcript like every other. Two statements at start only; every turn after this
-  // is a single update.
-  await persist(draft.id, { answers: answersOf(state), transcript, provenance: [], turn: state.turn });
+  // is a single update. No incoming TurnRequest exists yet to fingerprint, so this goes
+  // through writeDraft rather than persist — the first real turn is the first thing a retry
+  // of /api/interview/turn can match against.
+  await writeDraft(draft.id, { answers: answersOf(state), transcript, provenance: [], turn: state.turn });
 
   return { draftId: draft.id, ask: agentTurn(text, move.questionIndex, "ask", move.options, state) };
 }
@@ -155,6 +157,20 @@ export async function takeTurn(input: TurnRequest): Promise<TurnResponse> {
     // The store cannot tell "never existed" from "expired" from "already completed", and
     // neither can the person: there is nothing to resume either way.
     throw new InterviewError("draft_not_found", "No interview is in progress for that id.");
+  }
+
+  // Idempotent replay. A turn is atomic — computed once, written once — but the RESPONSE can
+  // still be lost after that write commits, and a radio drop on venue wifi is the documented
+  // way that happens. The client's retry then resends the same `requestId` it used the first
+  // time (see the field comment on TurnRequest) — by this point the draft has already been
+  // advanced past the question that request answered, so reprocessing it would silently bind
+  // the old reply to whatever question comes next. A request whose id matches the last one
+  // actually processed for this draft is answered from the response computed for it then,
+  // not reprocessed. Content alone cannot stand in for this: the same person re-asked the
+  // same question after an unreadable answer will often type the same unhelpful reply twice
+  // in a row, which is a genuine second turn wearing identical text, not a resend.
+  if (draft.lastTurnKey === input.requestId && draft.lastTurnResponse) {
+    return draft.lastTurnResponse;
   }
 
   const state = rehydrate(draft);
@@ -260,8 +276,7 @@ async function converse(
 
   if (move.kind === "fallback") {
     // The last answer of the budget landed; hand the rest over without a further model call.
-    await persist(draft.id, { answers: answersOf(next), transcript, provenance, turn: next.turn });
-    return fallbackResponse(move.remaining);
+    return persist(draft.id, { answers: answersOf(next), transcript, provenance, turn: next.turn }, input, fallbackResponse(move.remaining));
   }
 
   const text =
@@ -272,12 +287,11 @@ async function converse(
   const committed = commitMove(next, move);
   transcript.push({ role: "agent", text, questionIndex: move.questionIndex, kind: move.kind, at: nowIso() });
 
-  await persist(draft.id, { answers: answersOf(committed), transcript, provenance, turn: committed.turn });
-
   const ask = agentTurn(text, move.questionIndex, move.kind, move.options, committed);
   // A re-ask reveals the options in the UI. Someone whose answer just missed is precisely
   // who needs the floor put in front of them rather than tucked behind a disclosure.
-  return { status: "continue", ask: missed ? { ...ask, retry: true } : ask };
+  const response: TurnResponse = { status: "continue", ask: missed ? { ...ask, retry: true } : ask };
+  return persist(draft.id, { answers: answersOf(committed), transcript, provenance, turn: committed.turn }, input, response);
 }
 
 /**
@@ -322,8 +336,8 @@ async function drain(
     return finish(draft, move.answers, transcript, provenance, next);
   }
 
-  await persist(draft.id, { answers: answersOf(next), transcript, provenance, turn: next.turn });
-  return fallbackResponse(move.kind === "fallback" ? move.remaining : remaining.filter((q) => q !== questionIndex));
+  const response = fallbackResponse(move.kind === "fallback" ? move.remaining : remaining.filter((q) => q !== questionIndex));
+  return persist(draft.id, { answers: answersOf(next), transcript, provenance, turn: next.turn }, input, response);
 }
 
 /* ------------------------------------------------------------------ *
@@ -343,7 +357,9 @@ async function finish(
   //
   // A null here means the draft expired between reading it and now. Nothing can be done
   // about that, and it is no reason to withhold a scorecard the person has earned.
-  await saveDraft(draft.id, { answers, transcript, provenance, turn: state.turn });
+  // No request to fingerprint here (this save precedes the permanent write, not a turn
+  // response), and the draft is about to be deleted by createInterviewCompletion regardless.
+  await saveDraft(draft.id, { answers, transcript, provenance, turn: state.turn, lastTurnKey: null, lastTurnResponse: null });
 
   // Scoring is server-side and pure, exactly as it is for the tap form. The model has never
   // seen a mapping and neither has the client.
@@ -479,18 +495,42 @@ function fallbackResponse(remaining: number[]): TurnResponse {
 }
 
 /**
- * Write the turn. A draft that has expired underneath us is reported as such rather than
- * left to look like a save that worked: the person can be told their session lapsed, which
- * is actionable, instead of watching answers quietly fail to stick.
+ * Write draft fields with no request to fingerprint. Used only for the opening turn, which
+ * runs before any /api/interview/turn request exists.
+ *
+ * A draft that has expired underneath us is reported as such rather than left to look like a
+ * save that worked: the person can be told their session lapsed, which is actionable, instead
+ * of watching answers quietly fail to stick.
  */
-async function persist(id: string, patch: DraftPatch): Promise<void> {
-  const saved = await saveDraft(id, patch);
+async function writeDraft(id: string, patch: Omit<DraftPatch, "lastTurnKey" | "lastTurnResponse">): Promise<void> {
+  const saved = await saveDraft(id, { ...patch, lastTurnKey: null, lastTurnResponse: null });
   if (!saved) {
     throw new InterviewError(
       "draft_expired",
       `That interview has been idle more than ${INTERVIEW_LIMITS.draftTtlHours} hours.`,
     );
   }
+}
+
+/**
+ * Write draft fields AND remember the request that produced `response`, keyed by its
+ * `requestId`, so a retry of the identical request can be answered from this response
+ * instead of reprocessed. Returns `response`, so every call site can `return persist(...)`.
+ */
+async function persist(
+  id: string,
+  patch: Omit<DraftPatch, "lastTurnKey" | "lastTurnResponse">,
+  input: TurnRequest,
+  response: TurnResponse,
+): Promise<TurnResponse> {
+  const saved = await saveDraft(id, { ...patch, lastTurnKey: input.requestId, lastTurnResponse: response });
+  if (!saved) {
+    throw new InterviewError(
+      "draft_expired",
+      `That interview has been idle more than ${INTERVIEW_LIMITS.draftTtlHours} hours.`,
+    );
+  }
+  return response;
 }
 
 /**

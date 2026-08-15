@@ -71,6 +71,9 @@ export type InterviewDraft = {
   transcript: TranscriptTurn[];
   provenance: AnswerProvenance[];
   turn: number;
+  /** See the column comment on interviewDrafts in lib/schema.ts — the retry-safety pair. */
+  lastTurnKey: string | null;
+  lastTurnResponse: TurnResponse | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -98,6 +101,19 @@ export type StartResponse = {
 /** POST /api/interview/turn */
 export type TurnRequest = {
   draftId: string;
+  /**
+   * Client-generated, nanoid(14) like every other public id. Minted once per submit attempt
+   * — pressing "Send" or tapping an option — and reused verbatim by the client's own retry
+   * of that SAME attempt (a dropped connection, an unanswered POST); a fresh attempt (new
+   * text, a different tap) always mints a new one.
+   *
+   * This is what makes a retry recognisable on the server. Reply/tapped content alone cannot
+   * do it: the same person re-asked the same question after an unreadable answer will often
+   * type the same unhelpful thing twice in a row, which is a genuine second turn, not a
+   * resend — content-only matching cannot tell those apart, only the client can. See the
+   * `lastTurnKey` column comment on `interviewDrafts` in lib/schema.ts for the server side.
+   */
+  requestId: string;
   /** What the person typed. Mutually exclusive with `tapped`. */
   reply?: string;
   /** The option index they tapped instead of typing. */
