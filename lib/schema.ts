@@ -18,7 +18,7 @@ import {
 // Type-only, so nothing from the interview (or the Anthropic SDK behind it) is pulled into
 // the module drizzle-kit loads. The jsonb columns are typed by the contract rather than by
 // a second, drifting definition of the same shapes.
-import type { AnswerProvenance, IntakeMode, TranscriptTurn } from "./interview/contract";
+import type { AnswerProvenance, IntakeMode, TranscriptTurn, TurnResponse } from "./interview/contract";
 
 export const events = pgTable(
   "events",
@@ -134,6 +134,26 @@ export const interviewDrafts = pgTable(
     provenance: jsonb("provenance").$type<AnswerProvenance[]>().notNull().default(sql`'[]'::jsonb`),
     /** Agent turns issued so far, against INTERVIEW_LIMITS.maxTurns. */
     turn: integer("turn").notNull().default(0),
+    /**
+     * The client-generated `requestId` of the most recently PROCESSED /api/interview/turn
+     * request for this draft (see the TurnRequest field comment), paired with the exact
+     * response that request produced. Null until the first turn after start.
+     *
+     * A turn is atomic — computed fully, then written once — but the RESPONSE can still be
+     * lost after that write commits (a radio drop on venue wifi is the documented cause).
+     * The client's retry then resends the same requestId it used the first time. Without
+     * this pair, the server has already advanced past the question that request answered,
+     * so replaying it would silently bind the old reply to the new question. With it, a
+     * request whose id matches the one stored here is answered from the stored response
+     * instead of being reprocessed — no model call, no state change, no misattribution.
+     *
+     * Deliberately keyed on the client's id rather than on reply/tapped content: the same
+     * person re-asked the same question after an unreadable answer will often type the same
+     * unhelpful reply twice in a row, which is a genuine second turn, not a resend, and
+     * content-only matching cannot tell the two apart.
+     */
+    lastTurnKey: text("last_turn_key"),
+    lastTurnResponse: jsonb("last_turn_response").$type<TurnResponse>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

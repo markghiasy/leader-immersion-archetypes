@@ -2,9 +2,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { createTestDb, resetTestDb, teardownTestDb } from "./helpers/test-db";
 import { POST } from "@/app/api/submit/route";
-import { responses, teams } from "@/lib/schema";
-import { getRoster, getScorecard, seedEvent, teamOwnerBySlug, dedupeRoster } from "@/lib/queries";
-import { optionIndexById, questions, score, testVectors } from "@/lib/scoring";
+import { interviewDrafts, responses, teams } from "@/lib/schema";
+import { createInterviewCompletion, getRoster, getScorecard, seedEvent, teamOwnerBySlug, dedupeRoster } from "@/lib/queries";
+import { optionIndexById, QUESTION_COUNT, questions, score, testVectors } from "@/lib/scoring";
 
 let harness: Awaited<ReturnType<typeof createTestDb>>;
 
@@ -211,6 +211,69 @@ describe("POST /api/submit — validation", () => {
 
   it("writes nothing at all when validation fails", async () => {
     await submit({ contact: contact({ email: "nope" }), answers: VECTOR_ANSWERS });
+    expect(await harness.db.select().from(responses)).toHaveLength(0);
+    expect(await harness.db.select().from(teams)).toHaveLength(0);
+  });
+});
+
+describe("createInterviewCompletion — the interview's atomic completion", () => {
+  /** A draft with all 25 answers already settled, as `finish()` hands them in. */
+  async function seedDraft(id: string) {
+    await harness.db.insert(interviewDrafts).values({
+      id,
+      firstName: "Alex",
+      lastName: "Nguyen",
+      email: "alex@example.com",
+      mobile: "0412 345 678",
+      company: "Northwind",
+      answers: VECTOR_ANSWERS,
+      turn: QUESTION_COUNT,
+    });
+  }
+
+  function completionInput(draftId: string) {
+    return {
+      draftId,
+      contact: contact(),
+      answers: VECTOR_ANSWERS,
+      scored: score(VECTOR_ANSWERS),
+      eventSlug: null,
+      teamId: null,
+      intakeMode: "interview" as const,
+    };
+  }
+
+  it("writes the response and team, and consumes the draft, in one transaction", async () => {
+    await seedDraft("draft0000000a");
+
+    const result = await createInterviewCompletion(completionInput("draft0000000a"));
+
+    expect(result).not.toBeNull();
+    expect(await harness.db.select().from(responses)).toHaveLength(1);
+    expect(await harness.db.select().from(teams)).toHaveLength(1);
+    expect(await harness.db.select().from(interviewDrafts)).toHaveLength(0);
+  });
+
+  it("does not mint a second scorecard when the same draft is completed twice", async () => {
+    // Reproduces the retry a lost response (or a crash between the old separate
+    // createCompletion/deleteDraft statements) used to trigger: a second call for a draft
+    // that has already been consumed must be a no-op, not a second response and team.
+    await seedDraft("draft0000000b");
+    const input = completionInput("draft0000000b");
+
+    const first = await createInterviewCompletion(input);
+    const second = await createInterviewCompletion(input);
+
+    expect(first).not.toBeNull();
+    expect(second).toBeNull();
+    expect(await harness.db.select().from(responses)).toHaveLength(1);
+    expect(await harness.db.select().from(teams)).toHaveLength(1);
+  });
+
+  it("does nothing for a draft id that was never there", async () => {
+    const result = await createInterviewCompletion(completionInput("no-such-draft"));
+
+    expect(result).toBeNull();
     expect(await harness.db.select().from(responses)).toHaveLength(0);
     expect(await harness.db.select().from(teams)).toHaveLength(0);
   });

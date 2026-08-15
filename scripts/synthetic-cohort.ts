@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { OPTIONS_PER_QUESTION, QUESTION_COUNT, questions, score } from "@/lib/scoring";
 import { archetypeTitle } from "@/lib/content";
 import { makeRng } from "@/lib/interview/leverage";
+import { publicId } from "@/lib/ids";
 
 /**
  * Fifteen simulated people take the REAL interview, end to end, against the LIVE API.
@@ -140,7 +141,7 @@ async function runOne(style: Style, index: number): Promise<Result> {
         | { status: "continue"; ask: Ask }
         | { status: "complete"; resultId: string }
         | { status: "fallback"; remaining: number[]; questions: { index: number; options: string[] }[] }
-      >("/api/interview/turn", { draftId, reply });
+      >("/api/interview/turn", { draftId, requestId: publicId(), reply });
 
       if (turn.status === "complete") {
         base.completed = true;
@@ -153,7 +154,7 @@ async function runOne(style: Style, index: number): Promise<Result> {
         base.fellBack = true;
         let last: { status: string; resultId?: string } | null = null;
         for (const q of turn.questions) {
-          last = await post("/api/interview/turn", { draftId, tapped: truth[q.index] });
+          last = await post("/api/interview/turn", { draftId, requestId: publicId(), tapped: truth[q.index] });
         }
         if (last?.status === "complete" && last.resultId) {
           base.completed = true;

@@ -72,6 +72,8 @@ function toDraft(row: InterviewDraftRow): InterviewDraft {
     transcript: row.transcript,
     provenance: row.provenance,
     turn: row.turn,
+    lastTurnKey: row.lastTurnKey,
+    lastTurnResponse: row.lastTurnResponse,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -135,10 +137,13 @@ export async function getDraft(id: string): Promise<InterviewDraft | null> {
 }
 
 /**
- * The four fields a turn can move. Everything else about a draft — who it belongs to, which
- * event or invite it arrived on — is fixed at creation and never patched.
+ * The fields a turn can move. Everything else about a draft — who it belongs to, which event
+ * or invite it arrived on — is fixed at creation and never patched.
  */
-export type DraftPatch = Pick<InterviewDraft, "answers" | "transcript" | "provenance" | "turn">;
+export type DraftPatch = Pick<
+  InterviewDraft,
+  "answers" | "transcript" | "provenance" | "turn" | "lastTurnKey" | "lastTurnResponse"
+>;
 
 /**
  * Write the whole conversational state back, last-write-wins. Full replacement rather than
@@ -157,6 +162,8 @@ export async function saveDraft(id: string, patch: DraftPatch): Promise<Intervie
       transcript: patch.transcript,
       provenance: patch.provenance,
       turn: patch.turn,
+      lastTurnKey: patch.lastTurnKey,
+      lastTurnResponse: patch.lastTurnResponse,
       updatedAt: sql`now()`,
     })
     .where(and(eq(interviewDrafts.id, id), gt(interviewDrafts.updatedAt, ttlCutoff())))

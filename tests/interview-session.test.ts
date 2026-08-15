@@ -14,6 +14,7 @@ import {
   type TurnResponse,
 } from "@/lib/interview/contract";
 import { getDraft } from "@/lib/interview/store";
+import { publicId } from "@/lib/ids";
 import type { Certainty, ExtractionWithQuote } from "@/lib/interview/extractor";
 // The two endpoints under test. `vi.mock` below is hoisted above every import in this file,
 // so these already resolve to the mocked extractor and phrasing modules.
@@ -142,8 +143,10 @@ async function start(body: Partial<StartRequest> = {}): Promise<StartResponse> {
   return json as StartResponse;
 }
 
-async function turn(body: TurnRequest): Promise<TurnResponse> {
-  const response = await turnRoute(request("/api/interview/turn", body));
+async function turn(body: Omit<TurnRequest, "requestId"> & { requestId?: string }): Promise<TurnResponse> {
+  // A fresh id per call by default, so tests that don't care about retries don't have to
+  // invent one — see the requestId field comment on TurnRequest for what a real client does.
+  const response = await turnRoute(request("/api/interview/turn", { requestId: publicId(), ...body }));
   const json = await response.json();
   expect(response.status, `turn failed: ${JSON.stringify(json)}`).toBe(200);
   return json as TurnResponse;
@@ -259,6 +262,69 @@ describe("a full interview", () => {
       if (result.status !== "continue") throw new Error(`unexpected ${result.status}`);
       current = result.ask;
     }
+  });
+});
+
+/* ------------------------------------------------------------------ *
+ * Retry safety — audit finding #1
+ *
+ * A turn is atomic, but the RESPONSE can still be lost after the write commits (a radio
+ * drop on venue wifi is the documented cause). The client's retry then resends the same
+ * requestId. Before this fix, the server had already advanced past the question that
+ * request answered, and a same-content resend would silently answer the NEW question with
+ * the OLD reply instead.
+ * ------------------------------------------------------------------ */
+
+describe("retrying a turn whose response was lost", () => {
+  it("replays the exact prior response instead of applying the reply to the next question", async () => {
+    const { draftId, ask } = await start();
+    const q0 = ask.questionIndex;
+
+    models.extract.mockResolvedValueOnce(heard(q0, VECTOR_ANSWERS[q0], "explicit"));
+    const requestId = publicId();
+    const first = await turn({ draftId, requestId, reply: replyChoosing(q0, VECTOR_ANSWERS[q0]) });
+    if (first.status !== "continue") throw new Error(`unexpected ${first.status}`);
+
+    // The client never saw `first` (its connection dropped) and retries with the identical
+    // requestId and reply. Extraction must not run again — a real retry is answered from
+    // the cache, not reprocessed — and the response must be byte-identical to the first.
+    models.extract.mockRejectedValue(new Error("a retried turn must not be reprocessed"));
+    const retry = await turn({ draftId, requestId, reply: replyChoosing(q0, VECTOR_ANSWERS[q0]) });
+
+    expect(retry).toEqual(first);
+    expect(retry.status).toBe("continue");
+    if (retry.status !== "continue") throw new Error("unreachable");
+    expect(retry.ask.questionIndex).toBe(first.ask.questionIndex);
+
+    // Only q0 is settled — the retry did not advance a second question or overwrite q0's
+    // answer with whatever it would have (wrongly) been read as against question 1.
+    const draft = await readDraft(draftId);
+    expect(settledIndexes(draft!.answers)).toEqual([q0]);
+  });
+
+  it("still processes a genuinely new turn that happens to repeat the same reply text", async () => {
+    // The exact scenario that a content-only fingerprint (reply/tapped alone, no requestId)
+    // cannot tell apart from a retry: someone re-asked the same question after an unreadable
+    // answer who then types the same unhelpful thing again. Each attempt is a fresh, real
+    // submission with its own requestId, so both must be processed, not just the first.
+    const { draftId, ask } = await start();
+    const q0 = ask.questionIndex;
+
+    models.extract.mockResolvedValueOnce([]); // nothing heard — re-asks the same question
+    const missed = await turn({ draftId, reply: "Hmm. Hard to say." });
+    if (missed.status !== "continue") throw new Error(`unexpected ${missed.status}`);
+    expect(missed.ask.questionIndex).toBe(q0);
+    expect(missed.ask.retry).toBe(true);
+
+    models.extract.mockResolvedValueOnce([]); // still nothing — a genuine second miss
+    const missedAgain = await turn({ draftId, reply: "Hmm. Hard to say." });
+    if (missedAgain.status !== "continue") throw new Error(`unexpected ${missedAgain.status}`);
+    expect(missedAgain.ask.questionIndex).toBe(q0);
+    expect(models.extract).toHaveBeenCalledTimes(2);
+
+    // The opening turn already counts as 1; two re-asks after it make 3.
+    const draft = await readDraft(draftId);
+    expect(draft!.turn).toBe(3);
   });
 });
 

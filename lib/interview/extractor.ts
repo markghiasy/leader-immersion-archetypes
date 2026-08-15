@@ -71,6 +71,16 @@ export const DEFAULT_EXTRACTOR_CONFIG: ExtractorConfig = {
 
 export type ExtractionWithQuote = Extraction & { certainty: Certainty; quote: string };
 
+/**
+ * One client for the process's lifetime, not one per call. `new Anthropic()` per request
+ * meant no TCP/TLS reuse — every turn paid a fresh handshake on top of the model latency it
+ * was already spending. At event-day concurrency (hundreds of turns/minute) that overhead
+ * compounds; a shared client is a pure win with no correctness cost, since the SDK client is
+ * stateless between calls — every fact about a conversation is passed explicitly in the
+ * request body, never held on the client instance. See phrasing.ts for the same change.
+ */
+const sharedClient = new Anthropic();
+
 const SYSTEM = `You read what someone says about how they lead and work, and match it against a fixed set of multiple-choice questions.
 
 For each question you are shown, decide whether what the person actually said answers it. If it does, choose the option that best matches what they said.
@@ -132,7 +142,7 @@ export async function extract(
   openQuestions: number[],
   utterance: string,
   config: ExtractorConfig = DEFAULT_EXTRACTOR_CONFIG,
-  client = new Anthropic(),
+  client = sharedClient,
 ): Promise<ExtractionWithQuote[]> {
   if (openQuestions.length === 0) return [];
 

@@ -38,6 +38,8 @@ export const startRequestSchema = z.object({
 export const turnRequestSchema = z
   .object({
     draftId: draftIdSchema,
+    /** Same shape as every other public id — see the field comment on TurnRequest. */
+    requestId: publicIdSchema,
     reply: z
       .string()
       .trim()

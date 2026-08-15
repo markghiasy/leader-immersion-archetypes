@@ -6,6 +6,7 @@ import { INTERVIEW_LIMITS } from "@/lib/interview/contract";
 import type { AgentTurn, ApiError, StartResponse, TurnResponse } from "@/lib/interview/contract";
 import type { ClientQuestion } from "@/lib/scoring";
 import { contactSchema, fieldErrors } from "@/lib/validation";
+import { publicId } from "@/lib/ids";
 import quiz from "./quiz.module.css";
 import styles from "./interview.module.css";
 import ViewportDebug from "./ViewportDebug";
@@ -58,8 +59,15 @@ const CALCULATING_MS = 1400;
 /** What the person sees, which is not the same thing as the stored transcript. */
 type ThreadTurn = { role: "agent"; text: string } | { role: "person"; text: string };
 
-/** What we sent, kept so a failed turn can be retried byte-for-byte. */
-type Attempt = { payload: { reply?: string; tapped?: number }; personText: string };
+/**
+ * What we sent, kept so a failed turn can be retried byte-for-byte.
+ *
+ * `requestId` is minted once, here, when the attempt is first created — never inside
+ * `send()` — precisely so that `retry()` resending the SAME `Attempt` object resends the
+ * SAME id. That is what lets the server recognise a retry as a retry (see the field comment
+ * on TurnRequest) instead of a second, coincidentally identical turn.
+ */
+type Attempt = { payload: { reply?: string; tapped?: number }; personText: string; requestId: string };
 
 /** A remaining question, rendered as the plain tap form after a `fallback` response. */
 type FallbackQuestion = { index: number; text: string; options: string[] };
@@ -346,7 +354,7 @@ export default function InterviewChat({
       setTurns((t) => [...t, { role: "person", text: next.personText }]);
       setPending(true);
       try {
-        const data = await post<TurnResponse>("/api/interview/turn", { draftId, ...next.payload });
+        const data = await post<TurnResponse>("/api/interview/turn", { draftId, requestId: next.requestId, ...next.payload });
         receive(data);
       } catch (e) {
         const err = e instanceof InterviewError ? e : new InterviewError("Something went wrong.", true);
@@ -365,12 +373,12 @@ export default function InterviewChat({
   function sendTyped() {
     const text = reply.trim();
     if (!text || pending || !ask) return;
-    void send({ payload: { reply: text }, personText: text });
+    void send({ payload: { reply: text }, personText: text, requestId: publicId() });
   }
 
   function sendTap(optionIndex: number) {
     if (pending || !ask) return;
-    void send({ payload: { tapped: optionIndex }, personText: ask.options[optionIndex] });
+    void send({ payload: { tapped: optionIndex }, personText: ask.options[optionIndex], requestId: publicId() });
   }
 
   function retry() {
@@ -394,8 +402,17 @@ export default function InterviewChat({
         for (const question of fallback) {
           const value = fallbackAnswers[question.index];
           if (value === undefined || value === null) continue;
+          // A fresh id per tap, not a stable one for the form submission as a whole: each
+          // tap answers whatever question the server currently has outstanding, by design
+          // (see drain() in lib/interview/session.ts), so unlike the conversational turn
+          // above there is no single "attempt" a retry of this loop could reuse an id for.
+          // Retrying the whole loop after a partial failure re-POSTs already-settled taps,
+          // which drain() applies to whatever is newly outstanding rather than rejecting as
+          // stale — the same class of misattribution finding #1 closes for the conversational
+          // path, still open here. Flagged, not fixed, in this pass.
           const data = await post<{ status: string; resultId?: string }>("/api/interview/turn", {
             draftId,
+            requestId: publicId(),
             tapped: value,
           });
           if (data.status === "complete" && data.resultId) resultId = data.resultId;

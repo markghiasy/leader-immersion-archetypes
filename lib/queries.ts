@@ -4,7 +4,7 @@
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { getDb } from "./db";
-import { events, responses, teams, type Response } from "./schema";
+import { events, interviewDrafts, responses, teams, type Response } from "./schema";
 import { publicId } from "./ids";
 import type { Contact } from "./validation";
 import type { ScoreResult } from "./scoring";
@@ -113,6 +113,67 @@ export async function createCompletion(input: CreateCompletionInput): Promise<{ 
 
   teamIdCache.delete(teamSlug);
   return { resultId, teamSlug };
+}
+
+export type CreateInterviewCompletionInput = CreateCompletionInput & {
+  /** The draft this completion consumes. Deleted in the same transaction as the write. */
+  draftId: string;
+};
+
+/**
+ * The interview's completion path: consume the draft and create its response + team in ONE
+ * transaction, or do nothing if the draft is already gone.
+ *
+ * `createCompletion` above and `deleteDraft` used to be two separate statements, called back
+ * to back from `lib/interview/session.ts`. A crash or a lost response between them left the
+ * response (and its team) written but the draft still sitting there looking unfinished — so
+ * the client's retry, or a concurrent retry of the same final turn, would run the completion
+ * a second time: a second response row and a second team for one person, silently double-
+ * counting them in the archetype distribution.
+ *
+ * Folding the delete into the same transaction as the inserts closes that window. The delete
+ * runs first and its `RETURNING` clause is the guard: if no row comes back, some other
+ * attempt already consumed this draft, and this call does nothing rather than create a
+ * duplicate. The caller cannot recover the original resultId from here — the draft, and any
+ * link back to it, is gone by design once an interview completes — so a second attempt is
+ * reported the same way an unrecognised draft is, not as a fresh completion.
+ */
+export async function createInterviewCompletion(
+  input: CreateInterviewCompletionInput,
+): Promise<{ resultId: string; teamSlug: string } | null> {
+  const db = getDb();
+  const resultId = publicId();
+  const teamSlug = publicId();
+
+  const result = await db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(interviewDrafts)
+      .where(eq(interviewDrafts.id, input.draftId))
+      .returning({ id: interviewDrafts.id });
+
+    if (deleted.length === 0) return null;
+
+    await tx.insert(responses).values({
+      id: resultId,
+      eventSlug: input.eventSlug,
+      firstName: input.contact.firstName,
+      lastName: input.contact.lastName,
+      email: input.contact.email,
+      mobile: input.contact.mobile,
+      company: input.contact.company,
+      answers: input.answers,
+      totals: input.scored.totals,
+      profile: input.scored.profile,
+      teamId: input.teamId,
+      intakeMode: input.intakeMode,
+    });
+    await tx.insert(teams).values({ slug: teamSlug, ownerResponseId: resultId });
+
+    return { resultId, teamSlug };
+  });
+
+  if (result) teamIdCache.delete(teamSlug);
+  return result;
 }
 
 /* ------------------------------------------------------------------ *
