@@ -45,7 +45,9 @@ import { extract } from "./extractor";
 import { askFor, narrowingAsk, reAskFor } from "./phrasing";
 import { createDraft, getDraft, saveDraft, type DraftPatch } from "./store";
 import { createInterviewCompletion, knownEventSlugs, teamIdBySlug } from "@/lib/queries";
-import { clientQuestions, score, QUESTION_COUNT } from "@/lib/scoring";
+import { clientQuestions, score, QUESTION_COUNT, type ScoreResult } from "@/lib/scoring";
+import { sendScorecardEmail } from "@/lib/email";
+import { emailEnabled } from "@/lib/env";
 
 /**
  * The bar a narrowing answer must clear to settle a slot. Same as the controller's, on
@@ -385,7 +387,50 @@ async function finish(
     throw new InterviewError("draft_not_found", "That interview has already been completed.");
   }
 
+  await deliverScorecard(draft.contact, scored, result.resultId);
+
   return { status: "complete", resultId: result.resultId };
+}
+
+/**
+ * Send the scorecard to the address given at the start, without being able to harm the
+ * completion that just succeeded.
+ *
+ * We already hold everyone's email — it is required before the first question — so waiting
+ * for someone to ask for their scorecard leaves most of the room without one. This sends it
+ * unprompted; the button on the scorecard remains a REAL re-send, for the person whose
+ * address bounced or who cannot find it. Best-effort here, guaranteed path there.
+ *
+ * Three deliberate choices:
+ *
+ *   1. NOTHING here may throw. The response and team are already committed and the person
+ *      has earned their scorecard; an outage at the mail provider must cost them an email,
+ *      never their result. Every failure is logged and swallowed.
+ *   2. Awaited rather than left floating. A promise abandoned after the handler returns can
+ *      be killed mid-flight on any serverless host, so "fire and forget" would silently mean
+ *      "sometimes forget". The cost is a few hundred ms on the final turn only, hidden
+ *      entirely by the client's own calculating pause.
+ *   3. No platform helper (`waitUntil` and friends). Nothing in this app knows where it
+ *      runs, and the container target would not have it.
+ *
+ * Dormant until RESEND_API_KEY is set: `emailEnabled()` is false and this returns immediately.
+ */
+async function deliverScorecard(
+  contact: InterviewDraft["contact"],
+  scored: ScoreResult,
+  resultId: string,
+): Promise<void> {
+  if (!emailEnabled()) return;
+  try {
+    await sendScorecardEmail(contact.email, {
+      firstName: contact.firstName,
+      profile: scored.profile,
+      resultId,
+      totals: scored.totals,
+    });
+  } catch (error) {
+    console.error("[interview] scorecard email failed", error instanceof Error ? error.message : error);
+  }
 }
 
 /**

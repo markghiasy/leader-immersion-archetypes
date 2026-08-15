@@ -650,3 +650,51 @@ describe("provenance", () => {
     expect(draft!.transcript[1]).toMatchObject({ role: "person", text: reply });
   });
 });
+
+describe("the scorecard email on completion", () => {
+  /**
+   * The address is captured before the first question, so the scorecard is sent unprompted
+   * rather than waiting for someone to ask. The rule that matters is what happens when that
+   * send fails: the response and team are already committed, and a mail outage must cost an
+   * email, never somebody's result.
+   */
+  it("does not cost anyone their scorecard when the mail provider fails", async () => {
+    const email = await import("@/lib/email");
+    const env = await import("@/lib/env");
+    const enabled = vi.spyOn(env, "emailEnabled").mockReturnValue(true);
+    const send = vi.spyOn(email, "sendScorecardEmail").mockRejectedValue(new Error("resend is down"));
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const { draftId, ask } = await start({});
+      const { resultId } = await completeInterview(draftId, ask);
+
+      // The completion stands, unchanged, despite the send throwing.
+      expect(resultId).toMatch(/^[A-Za-z0-9_-]{14}$/);
+      expect(await harness.db.select().from(responses)).toHaveLength(1);
+      expect(await harness.db.select().from(teams)).toHaveLength(1);
+      expect(await harness.db.select().from(interviewDrafts)).toHaveLength(0);
+      expect(send).toHaveBeenCalledTimes(1);
+    } finally {
+      enabled.mockRestore();
+      send.mockRestore();
+      logged.mockRestore();
+    }
+  });
+
+  it("stays dormant while RESEND_API_KEY is unset", async () => {
+    const email = await import("@/lib/email");
+    const send = vi.spyOn(email, "sendScorecardEmail").mockResolvedValue(undefined);
+
+    try {
+      const { draftId, ask } = await start({});
+      const { resultId } = await completeInterview(draftId, ask);
+
+      expect(resultId).toMatch(/^[A-Za-z0-9_-]{14}$/);
+      // emailEnabled() is false with no key configured, so nothing is attempted at all.
+      expect(send).not.toHaveBeenCalled();
+    } finally {
+      send.mockRestore();
+    }
+  });
+});
