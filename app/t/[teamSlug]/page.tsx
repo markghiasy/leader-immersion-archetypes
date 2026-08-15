@@ -1,5 +1,5 @@
 import InterviewChat from "@/components/InterviewChat";
-import { BrandFooter, BrandHeader } from "@/components/Brand";
+import { BrandHeader } from "@/components/Brand";
 import { EntryHero } from "@/components/EntryHero";
 import { teamOwnerBySlug } from "@/lib/queries";
 import { publicIdSchema } from "@/lib/validation";
@@ -21,7 +21,9 @@ export default async function TeamInvitePage({ params }: { params: Promise<{ tea
   return (
     <div className="page">
       <BrandHeader />
-      <main className="container">
+      {/* container-fill and no footer: the invite link renders the interview, not a roster,
+          so it is the same full-height app screen as /q/[event]. */}
+      <main className="container container-fill">
         {!team && (
           <p className="notice" style={{ marginBottom: "var(--space-4)" }}>
             We did not recognise that invite link, so we could not connect you to a team. You can still take the quiz
@@ -35,7 +37,6 @@ export default async function TeamInvitePage({ params }: { params: Promise<{ tea
           intro={<EntryHero invitedBy={team?.ownerFirstName} />}
         />
       </main>
-      <BrandFooter />
     </div>
   );
 }
