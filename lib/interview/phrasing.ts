@@ -36,6 +36,13 @@ export type PhrasingConfig = { model: string; effort: "low" | "medium" | "high" 
 export const DEFAULT_PHRASING: PhrasingConfig = { model: "claude-opus-5", effort: "low" };
 
 /**
+ * One client for the process's lifetime, not one per call — see the identical note in
+ * extractor.ts. `askFor` and `reAskFor` together are the second model call every turn makes;
+ * both shared this same problem.
+ */
+const sharedClient = new Anthropic();
+
+/**
  * @param questionText the schema's wording — must appear verbatim in the result.
  * @param lastReply    what the person said last, or null on the opening turn.
  */
@@ -43,7 +50,7 @@ export async function askFor(
   questionText: string,
   lastReply: string | null,
   config: PhrasingConfig = DEFAULT_PHRASING,
-  client = new Anthropic(),
+  client = sharedClient,
 ): Promise<PhrasedAsk> {
   const response = await client.messages.create({
     model: config.model,
@@ -108,7 +115,7 @@ export async function reAskFor(
   questionText: string,
   lastReply: string,
   config: PhrasingConfig = DEFAULT_PHRASING,
-  client = new Anthropic(),
+  client = sharedClient,
 ): Promise<PhrasedAsk> {
   const response = await client.messages.create({
     model: config.model,
