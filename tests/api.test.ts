@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { createTestDb, resetTestDb, teardownTestDb } from "./helpers/test-db";
 import { POST } from "@/app/api/submit/route";
+import { GET as exportRoute } from "@/app/admin/export/route";
 import { interviewDrafts, responses, teams } from "@/lib/schema";
 import { adminResponses, createInterviewCompletion, getRoster, getScorecard, seedEvent, teamOwnerBySlug, dedupeRoster } from "@/lib/queries";
 import { optionIndexById, QUESTION_COUNT, questions, score, testVectors } from "@/lib/scoring";
@@ -345,5 +346,56 @@ describe("adminResponses — the inviter's archetype, for the pairing follow-up"
 
     const { rows } = await adminResponses({}, 50, 0);
     expect(rows.find((r) => r.email === "direct@example.com")?.ownerProfile).toBeNull();
+  });
+});
+
+describe("the admin export round trip", () => {
+  /**
+   * The follow-up after the event is a mail merge sent by hand: export, merge, send. That
+   * makes this CSV the deliverable, not a debugging aid — so it is tested the way it will be
+   * used, from a completed interview all the way to a parsed row with a working link in it.
+   */
+  it("carries a usable scorecard URL on the production origin", async () => {
+    const previous = process.env.BASE_URL;
+    process.env.BASE_URL = "https://leader-immersion-archetype.aaronsansoni.com";
+
+    try {
+      await harness.db.insert(interviewDrafts).values({
+        id: "draftexport01",
+        firstName: "Dana",
+        lastName: "Reed",
+        email: "dana@example.com",
+        mobile: "0412 000 111",
+        answers: VECTOR_ANSWERS,
+        turn: QUESTION_COUNT,
+      });
+      const completed = await createInterviewCompletion({
+        draftId: "draftexport01",
+        contact: contact({ email: "dana@example.com" }),
+        answers: VECTOR_ANSWERS,
+        scored: score(VECTOR_ANSWERS),
+        eventSlug: null,
+        teamId: null,
+        intakeMode: "interview" as const,
+      });
+      expect(completed).not.toBeNull();
+
+      const csv = await (await exportRoute(new Request("http://localhost:3000/admin/export"))).text();
+      const [head, first] = csv.split("\r\n");
+      const cols = head.split(",");
+      const cells = first.split(",");
+      const at = (name: string) => cells[cols.indexOf(name)];
+
+      // The row a mail merge reads: who they are, where their scorecard lives, what it says.
+      expect(at("email")).toBe("dana@example.com");
+      expect(at("scorecard_url")).toBe(
+        `https://leader-immersion-archetype.aaronsansoni.com/r/${completed!.resultId}`,
+      );
+      // And that URL is the same one the app itself serves, not a second spelling of it.
+      expect(at("scorecard_url").endsWith(`/r/${at("result_id")}`)).toBe(true);
+    } finally {
+      if (previous === undefined) delete process.env.BASE_URL;
+      else process.env.BASE_URL = previous;
+    }
   });
 });

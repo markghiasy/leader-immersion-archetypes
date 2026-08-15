@@ -1,5 +1,6 @@
 import { archetypeName } from "@/lib/content";
 import { adminResponses } from "@/lib/queries";
+import { scorecardUrl } from "@/lib/env";
 import { buildQuery, csvRow, parseAdminFilters, type AdminSearchParams } from "@/lib/admin-filters";
 
 /** CSV of the current filter. Sits under /admin so proxy.ts Basic Auth covers it. */
@@ -16,6 +17,9 @@ export async function GET(request: Request) {
 
   const header = csvRow([
     "result_id",
+    // The whole URL, not just the id. The follow-up is a mail merge sent by hand, and
+    // rebuilding this from an id in a spreadsheet formula is a step to get wrong at 9pm.
+    "scorecard_url",
     "first_name",
     "last_name",
     "email",
@@ -35,6 +39,7 @@ export async function GET(request: Request) {
   const body = rows.map((row) =>
     csvRow([
       row.id,
+      scorecardUrl(row.id),
       row.firstName,
       row.lastName,
       row.email,
