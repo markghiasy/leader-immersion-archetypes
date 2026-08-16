@@ -4,14 +4,41 @@
 import contentJson from "@/inputs/archetype-content.json";
 import { PROFILE_COUNT } from "./scoring";
 
+/**
+ * `essence` through `watchouts` are the original copy the 499-response baseline was gathered
+ * against. Everything below them is merged from the Empire Archetype Leadership Knowledge
+ * Base v1.0 (Aaron Sansoni Group, 16 Aug 2026), which is **unratified** — it is a work in
+ * progress, not signed-off methodology.
+ *
+ * `essence` itself was REWRITTEN from that pack. The original wording is kept verbatim in
+ * `essence_legacy` so the change is a one-line revert rather than an archaeology exercise.
+ * The difference is not stylistic: ours described a personality ("motivates and directs"),
+ * the pack states a contribution ("builds people, trust, culture"). The pairwise guidance is
+ * written in the second vocabulary, so mixing them makes the report contradict itself — which
+ * is the whole reason for taking one and not both.
+ */
 export type Archetype = {
   profile: number;
   name: string;
   essence: string;
+  /** The pre-v2 wording, retained so the essence rewrite can be reverted without a lookup. */
+  essence_legacy: string;
   description: string;
   exemplar: string;
   strengths: string[];
   watchouts: string[];
+  /** What this archetype does under pressure — its predictable trap. */
+  pressure_shadow: string;
+  /** What this archetype looks like at its best; the direction, not the label. */
+  mature_expression: string;
+  /** The specific antidote to the pressure shadow. */
+  counter_move: string;
+  /** What this archetype needs from the people around it. */
+  needs: string[];
+  /** How trust is built with this archetype. */
+  trust: string;
+  /** Six axes, 1-5. The only quantitative shape we hold for an archetype. */
+  dimensions: { pace: number; structure: number; people: number; data: number; risk: number; vision: number };
 };
 
 const archetypes = contentJson.archetypes as Archetype[];

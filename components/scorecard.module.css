@@ -177,3 +177,42 @@
   margin-top: var(--space-3);
   font-size: var(--text-sm);
 }
+
+/* --- v2: pressure, counter-move and needs -------------------------------
+   Merged from the unratified Empire Archetype Knowledge Base. Kept to the card
+   conventions already on this page rather than inventing a second visual language,
+   because this is the page people read once and it must stay legible under a thumb. */
+
+.subhead {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* The shadow is the one paragraph on this page that describes a failure mode. It is set
+   apart so it reads as observation rather than accusation, and so the counter-move that
+   follows is visibly the answer to it. */
+.pressure {
+  margin: 0;
+  padding-left: var(--space-4);
+  border-left: var(--border-width-heavy) solid var(--color-border-strong);
+}
+
+.needs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.needItem {
+  padding: var(--space-2) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+}

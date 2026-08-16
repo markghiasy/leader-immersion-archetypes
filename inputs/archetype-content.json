@@ -1,10 +1,10 @@
 {
-  "$comment": "Leader Archetype content layer v2 (13 Aug 2026). Maps 1:1 onto profile numbers 1-8 in archetype-schema.json. Copy sourced from leaderarchetypesvWORKING.pptx with typos normalised; Australian English. This file is presentation copy only; it must never affect scoring.",
+  "$comment": "Leader Archetype content layer v2 (13 Aug 2026). Maps 1:1 onto profile numbers 1-8 in archetype-schema.json. Copy sourced from leaderarchetypesvWORKING.pptx with typos normalised; Australian English. This file is presentation copy only; it must never affect scoring. | v2 fields (pressure_shadow, mature_expression, counter_move, needs, trust, dimensions) and the essence rewrite are merged from the Empire Archetype Leadership Knowledge Base v1.0 (Aaron Sansoni Group, 2026-08-16), which is UNRATIFIED. `essence_legacy` preserves the original wording.",
   "archetypes": [
     {
       "profile": 1,
       "name": "The Innovator",
-      "essence": "Can't stop inventing; finds the best ideas where others would have given up.",
+      "essence": "Creates possibility, new ideas and future direction.",
       "description": "Innovators can't stop themselves from thinking up new things. They often find their best ideas when others would have given up. Before Thomas Edison's light bulb succeeded he had many failures, but his persistence paid off.",
       "exemplar": "Thomas Edison",
       "strengths": [
@@ -18,12 +18,31 @@
         "Forgetting the operations",
         "Spreading too far and wide",
         "Ignoring feedback"
-      ]
+      ],
+      "essence_legacy": "Can't stop inventing; finds the best ideas where others would have given up.",
+      "pressure_shadow": "Chases new ideas, changes direction, over-involves themselves and loses operational focus.",
+      "mature_expression": "A visionary who chooses the right ideas, creates clear goals and empowers operators to execute.",
+      "counter_move": "Finish before adding. Translate vision into a clear outcome, listen to feedback and let operators own execution.",
+      "needs": [
+        "Freedom to think",
+        "A meaningful challenge",
+        "Clear outcomes",
+        "Room to experiment"
+      ],
+      "trust": "Listen to ideas seriously, protect autonomy and give honest feedback early.",
+      "dimensions": {
+        "pace": 5,
+        "structure": 2,
+        "people": 3,
+        "data": 2,
+        "risk": 5,
+        "vision": 5
+      }
     },
     {
       "profile": 2,
       "name": "The Influencer",
-      "essence": "Thrives in the spotlight; natural charm that draws people in.",
+      "essence": "Creates attention, belief, energy and relationships.",
       "description": "Influencers thrive in the spotlight. They adapt quickly and have a natural charm that draws people in. Their confidence is inspiring, like Oprah Winfrey, who turned her media presence into a global brand.",
       "exemplar": "Oprah Winfrey",
       "strengths": [
@@ -37,12 +56,31 @@
         "Lack of focus",
         "Not spending time with the team",
         "Burning out"
-      ]
+      ],
+      "essence_legacy": "Thrives in the spotlight; natural charm that draws people in.",
+      "pressure_shadow": "Chases attention, says yes too often, changes focus and runs on personal energy until burnout.",
+      "mature_expression": "A signal-builder who turns attention into trust, commercial momentum and a stronger team.",
+      "counter_move": "Reduce the noise. Protect focus, document commitments and spend enough time with the people doing the work.",
+      "needs": [
+        "Connection",
+        "Visible purpose",
+        "Recognition",
+        "Momentum"
+      ],
+      "trust": "Acknowledge contribution, involve them early and be direct without diminishing their public confidence.",
+      "dimensions": {
+        "pace": 5,
+        "structure": 2,
+        "people": 5,
+        "data": 2,
+        "risk": 4,
+        "vision": 4
+      }
     },
     {
       "profile": 3,
       "name": "The Guide",
-      "essence": "Motivates and directs; turns information into action.",
+      "essence": "Builds people, trust, culture and collective belief.",
       "description": "Guides excel at motivating and directing people. They turn information into action and are excellent at rallying their teams, similar to how Nelson Mandela led with vision and compassion.",
       "exemplar": "Nelson Mandela",
       "strengths": [
@@ -56,12 +94,31 @@
         "Being seen as playing favourites",
         "Neglecting self-care",
         "Over-promising"
-      ]
+      ],
+      "essence_legacy": "Motivates and directs; turns information into action.",
+      "pressure_shadow": "Rescues, overpromises, avoids hard consequences and takes on too much emotional load.",
+      "mature_expression": "A culture shaper who combines humanity with standards, consequences and measurable results.",
+      "counter_move": "Do not rescue or overpromise. Hold the standard, name the commercial result and allow people to carry their own responsibility.",
+      "needs": [
+        "Purpose",
+        "Trust",
+        "People impact",
+        "Healthy relationships"
+      ],
+      "trust": "Be genuine, consistent and fair. Explain the human impact of decisions.",
+      "dimensions": {
+        "pace": 3,
+        "structure": 3,
+        "people": 5,
+        "data": 2,
+        "risk": 3,
+        "vision": 4
+      }
     },
     {
       "profile": 4,
       "name": "The Negotiator",
-      "essence": "Finds the best deals; brings people together for mutual benefit.",
+      "essence": "Creates leverage, deals, alliances and movement between interests.",
       "description": "Negotiators are skilled at finding the best deals and bringing people together for mutual benefit. They are charismatic and excel at reading situations, much like Warren Buffett in the investment world.",
       "exemplar": "Warren Buffett",
       "strengths": [
@@ -75,12 +132,31 @@
         "Overconfidence",
         "Burning bridges",
         "Short-term focus"
-      ]
+      ],
+      "essence_legacy": "Finds the best deals; brings people together for mutual benefit.",
+      "pressure_shadow": "Pushes too hard, becomes overconfident, trades long-term trust for short-term wins and burns bridges.",
+      "mature_expression": "An architect of alliances who creates win-win-win value without compromising trust or the long-term game.",
+      "counter_move": "Protect the long game. Make interests transparent, keep ethics visible and do not trade trust for a fast win.",
+      "needs": [
+        "A clear win",
+        "Authority",
+        "Room to manoeuvre",
+        "A meaningful relationship"
+      ],
+      "trust": "Be transparent about interests, honour agreements and do not change the rules after the negotiation begins.",
+      "dimensions": {
+        "pace": 5,
+        "structure": 3,
+        "people": 4,
+        "data": 3,
+        "risk": 4,
+        "vision": 3
+      }
     },
     {
       "profile": 5,
       "name": "The Play Maker",
-      "essence": "Reads the market; times the moves that maximise returns.",
+      "essence": "Reads timing, capital, options and risk-reward.",
       "description": "Play Makers are experts at identifying the right time to buy and sell assets. They analyse markets and trends to maximise their profits, like George Soros, who made billions through strategic trades.",
       "exemplar": "George Soros",
       "strengths": [
@@ -94,12 +170,31 @@
         "Risk aversion",
         "Isolation",
         "Ignoring your gut"
-      ]
+      ],
+      "essence_legacy": "Reads the market; times the moves that maximise returns.",
+      "pressure_shadow": "Over-analyses, isolates, delays commitment and uses risk management to avoid the decision.",
+      "mature_expression": "A disciplined capital allocator who combines evidence, timing, judgment and decisive action.",
+      "counter_move": "Set a decision deadline. Involve people, use judgment as well as data and avoid using analysis to delay ownership.",
+      "needs": [
+        "Reliable data",
+        "Optionality",
+        "Clear risk limits",
+        "Time-bound decisions"
+      ],
+      "trust": "Be accurate, disclose assumptions and separate facts from enthusiasm.",
+      "dimensions": {
+        "pace": 3,
+        "structure": 4,
+        "people": 2,
+        "data": 5,
+        "risk": 3,
+        "vision": 3
+      }
     },
     {
       "profile": 6,
       "name": "The Architect",
-      "essence": "Patiently accumulates; thorough, compounding growth.",
+      "essence": "Builds durable structures, assets and long-term operating plans.",
       "description": "Architects focus on gradually accumulating assets. They are patient and thorough, ensuring that their investments grow over time, similar to how Warren Buffett built his fortune.",
       "exemplar": "Warren Buffett",
       "strengths": [
@@ -113,12 +208,31 @@
         "Micromanaging",
         "Keeping pace with growth",
         "Under-communicating the plan"
-      ]
+      ],
+      "essence_legacy": "Patiently accumulates; thorough, compounding growth.",
+      "pressure_shadow": "Tightens control, slows change, over-plans and communicates the detail without the story.",
+      "mature_expression": "A builder of durable value who protects foundations while moving fast enough for the opportunity.",
+      "counter_move": "Communicate the why, not only the plan. Delegate outcomes, allow movement and resist perfecting the business into slowness.",
+      "needs": [
+        "A clear plan",
+        "Sequence",
+        "Stability",
+        "Long-term ownership"
+      ],
+      "trust": "Be consistent, prepared and realistic about time, resources and trade-offs.",
+      "dimensions": {
+        "pace": 2,
+        "structure": 5,
+        "people": 3,
+        "data": 4,
+        "risk": 2,
+        "vision": 4
+      }
     },
     {
       "profile": 7,
       "name": "The Guardian",
-      "essence": "Meticulous with resources; consistent cash flow, controlled risk.",
+      "essence": "Protects resources, standards, continuity and downside.",
       "description": "Guardians are meticulous in managing resources and ensuring consistent cash flow. They are detail-oriented and avoid unnecessary risks, like John D. Rockefeller, who dominated the oil industry through careful management.",
       "exemplar": "John D. Rockefeller",
       "strengths": [
@@ -132,12 +246,31 @@
         "Being rigid",
         "Micromanaging",
         "Lack of innovation"
-      ]
+      ],
+      "essence_legacy": "Meticulous with resources; consistent cash flow, controlled risk.",
+      "pressure_shadow": "Freezes, tightens control, says no too early and mistakes certainty for safety.",
+      "mature_expression": "A steward who protects the downside while creating enough freedom for responsible upside.",
+      "counter_move": "Protect without freezing. Set an acceptable risk range, allow controlled experiments and avoid controlling every move.",
+      "needs": [
+        "Trust",
+        "Clarity",
+        "Safeguards",
+        "Consistency"
+      ],
+      "trust": "Do what you said, avoid surprises and provide evidence that risks are understood.",
+      "dimensions": {
+        "pace": 2,
+        "structure": 5,
+        "people": 3,
+        "data": 4,
+        "risk": 1,
+        "vision": 2
+      }
     },
     {
       "profile": 8,
       "name": "The Engineer",
-      "essence": "Refines systems; always tinkering toward a better way.",
+      "essence": "Turns problems into systems, process and technical execution.",
       "description": "Engineers are focused on improving and refining systems. They love to tinker and find better ways to do things, much like Henry Ford revolutionised automobile manufacturing.",
       "exemplar": "Henry Ford",
       "strengths": [
@@ -151,7 +284,26 @@
         "Over-focusing on systems",
         "Gaps in communication",
         "Not seeing the big picture"
-      ]
+      ],
+      "essence_legacy": "Refines systems; always tinkering toward a better way.",
+      "pressure_shadow": "Retreats into detail, perfects the wrong thing, communicates too little and loses the commercial or human context.",
+      "mature_expression": "A builder of scalable systems who solves the right problem and brings people with the change.",
+      "counter_move": "Zoom out before solving. Explain the business and people impact, communicate progress and release useful before perfect.",
+      "needs": [
+        "A specific problem",
+        "Technical ownership",
+        "A definition of done",
+        "Connection to the bigger picture"
+      ],
+      "trust": "Respect expertise, be precise and avoid changing requirements without explaining why.",
+      "dimensions": {
+        "pace": 3,
+        "structure": 5,
+        "people": 2,
+        "data": 5,
+        "risk": 3,
+        "vision": 3
+      }
     }
   ]
 }

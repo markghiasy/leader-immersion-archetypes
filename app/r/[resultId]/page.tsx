@@ -75,6 +75,34 @@ export default async function ScorecardPage({ params }: { params: Promise<{ resu
             </div>
           </div>
 
+          {/* 3b — under pressure, and what to do about it.
+              Deliberately one card, not three: the shadow is only useful next to its
+              counter-move, and the mature expression is what stops the whole section
+              reading as a criticism of the person holding it. */}
+          <section className="card">
+            <h2>Under pressure</h2>
+            <p className={styles.pressure}>{archetype.pressure_shadow}</p>
+            <h3 className={styles.subhead}>Your counter-move</h3>
+            <p>{archetype.counter_move}</p>
+            <h3 className={styles.subhead}>At your best</h3>
+            <p>{archetype.mature_expression}</p>
+          </section>
+
+          {/* 3c — what this archetype needs from the people around it. The bridge into the
+              team roster below: it is the first thing that is about others, not about you. */}
+          <section className="card">
+            <h2>What you need around you</h2>
+            <ul className={styles.needs}>
+              {archetype.needs.map((item) => (
+                <li key={item} className={styles.needItem}>
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <h3 className={styles.subhead}>How people build trust with you</h3>
+            <p>{archetype.trust}</p>
+          </section>
+
           {/* 4 — invite your team */}
           <section className="card">
             <h2>Invite your team</h2>
