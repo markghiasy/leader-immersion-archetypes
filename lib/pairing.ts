@@ -81,3 +81,39 @@ export function pairingFor(
 export function allPairings(): readonly PairingRecord[] {
   return RECORDS;
 }
+
+/* ------------------------------------------------------------------ *
+ * Merge helpers
+ *
+ * Pure text functions used when building the follow-up. They live here rather than in the
+ * export script so they can be tested, and so the eventual send path reuses them instead of
+ * reimplementing the same two decisions slightly differently.
+ * ------------------------------------------------------------------ */
+
+/**
+ * People type their own names, so they arrive as "mark", "MARK", "mark  ghiasy ". Sent
+ * unedited that reads as a mail merge nobody checked — "mark is The Influencer" mid-sentence.
+ * Hyphens and apostrophes are preserved because O'Brien and Smith-Jones are real names.
+ */
+export function titleCase(name: string): string {
+  return name
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[^\s'-]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
+/**
+ * Drop the per-pillar boilerplate closing 224 of the 256 records: "At the TEAM level, the
+ * leader must use their own edge without forcing the other person to think, communicate or
+ * decide in the same way." It is identical across every pairing at a given pillar, so in an
+ * email it is the sentence that tells a reader this was generated rather than written.
+ *
+ * The other 32 records — the same-archetype pairings — close on "The opportunity is fluency;
+ * the danger is…", which is genuine per-pairing content and is deliberately left alone.
+ */
+export function trimBoilerplate(text: string): string {
+  return text
+    .replace(/\s*At the (?:TEAM|LEADERS|BUSINESS|EMPIRE) level, the leader must use their own edge[^.]*\.\s*/i, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}

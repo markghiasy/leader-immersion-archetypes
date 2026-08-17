@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allPairings, archetypeKey, DEFAULT_PILLAR, pairingFor, PILLARS } from "@/lib/pairing";
+import { allPairings, archetypeKey, DEFAULT_PILLAR, pairingFor, PILLARS, titleCase, trimBoilerplate } from "@/lib/pairing";
 import { allArchetypes } from "@/lib/content";
 
 /**
@@ -51,5 +51,46 @@ describe("pairwise guidance", () => {
   it("returns null for a profile that does not exist rather than throwing", () => {
     expect(pairingFor(99, 1)).toBeNull();
     expect(pairingFor(1, 0)).toBeNull();
+  });
+});
+
+describe("merge helpers", () => {
+  it("title-cases names people typed themselves", () => {
+    expect(titleCase("mark")).toBe("Mark");
+    expect(titleCase("MARK GHIASY")).toBe("Mark Ghiasy");
+    expect(titleCase("  india   stewart evans ")).toBe("India Stewart Evans");
+  });
+
+  it("preserves the punctuation inside real names", () => {
+    expect(titleCase("o'brien")).toBe("O'Brien");
+    expect(titleCase("SMITH-JONES")).toBe("Smith-Jones");
+  });
+
+  it("removes the per-pillar boilerplate that closes 224 of the 256 records", () => {
+    const rec = pairingFor(1, 3, "team")!;
+    expect(rec.dynamic).toMatch(/At the TEAM level, the leader must use their own edge/);
+    const trimmed = trimBoilerplate(rec.dynamic);
+    expect(trimmed).not.toMatch(/must use their own edge/);
+    // The per-pair substance must survive: both contributions are still described.
+    expect(trimmed).toMatch(/Innovator/);
+    expect(trimmed).toMatch(/Guide/);
+    expect(trimmed.endsWith(".")).toBe(true);
+  });
+
+  it("leaves the same-archetype records alone — their closing line is real content", () => {
+    const rec = pairingFor(1, 1, "team")!;
+    expect(rec.dynamic).toMatch(/opportunity is fluency/);
+    expect(trimBoilerplate(rec.dynamic)).toMatch(/opportunity is fluency/);
+  });
+
+  it("strips the boilerplate from every record that carries it, and only those", () => {
+    let stripped = 0;
+    for (const r of allPairings()) {
+      const t = trimBoilerplate(r.dynamic);
+      if (t !== r.dynamic) stripped += 1;
+      expect(t).not.toMatch(/must use their own edge/);
+      expect(t.length).toBeGreaterThan(60);
+    }
+    expect(stripped).toBe(224);
   });
 });
