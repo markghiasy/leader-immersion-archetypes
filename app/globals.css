@@ -254,3 +254,25 @@ select {
   color: var(--color-text-muted);
   font-size: var(--text-xs);
 }
+
+/* Shown in place of the interview when INTAKE_CLOSED is set. Deliberately plain: most people
+   who see this arrived days late from a colleague's invite link and need one clear message,
+   not a designed dead end. */
+.intake-closed {
+  max-width: 46ch;
+  margin: var(--space-6) auto;
+  text-align: center;
+}
+
+.intake-closed h1 {
+  margin-bottom: var(--space-4);
+}
+
+.intake-closed p {
+  margin-bottom: var(--space-3);
+}
+
+.intake-closed-quiet {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}

@@ -2,6 +2,8 @@ import InterviewChat from "@/components/InterviewChat";
 import { BrandHeader } from "@/components/Brand";
 import { EntryHero } from "@/components/EntryHero";
 import { eventSlugSchema } from "@/lib/validation";
+import { IntakeClosed } from "@/components/IntakeClosed";
+import { intakeClosed } from "@/lib/env";
 
 /**
  * The QR target.
@@ -32,7 +34,11 @@ export default async function EventEntryPage({ params }: { params: Promise<{ eve
       <main className="container container-fill">
         {/* The interview is the primary journey; the tap form survives inside it as the
             in-turn escape hatch and the turn-budget fallback. */}
-        <InterviewChat event={eventSlug} intro={<EntryHero />} />
+        {intakeClosed() ? (
+          <IntakeClosed />
+        ) : (
+          <InterviewChat event={eventSlug} intro={<EntryHero />} />
+        )}
       </main>
       {/* No footer on the interview screen. This is the one page where vertical space is
           scarce — a 25-turn thread, a sticky composer and a soft keyboard — and the wordmark

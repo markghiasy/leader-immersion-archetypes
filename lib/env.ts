@@ -69,3 +69,27 @@ export function warnIfEmailDisabled(): void {
   warned = true;
   console.warn("[startup] RESEND_API_KEY is not set — the 'email me my scorecard' section is disabled.");
 }
+
+/**
+ * INTAKE CLOSED — the exercise is over, but the results are not.
+ *
+ * Set `INTAKE_CLOSED=1` to stop new interviews. This deliberately does NOT take the app down:
+ * 509 people hold permanent `/r/<id>` scorecard links that were mailed to them, and the whole
+ * reason this runs on its own domain is that those links outlive the event. Closing intake must
+ * therefore be a door, not a demolition.
+ *
+ * What it closes: the three entry pages and `POST /api/interview/start`, plus the legacy tap
+ * form at `POST /api/submit`.
+ *
+ * What it deliberately leaves OPEN: `POST /api/interview/turn` and the draft-resume endpoint,
+ * so the ~93 people who are mid-conversation can finish rather than being cut off after twenty
+ * answers (Mark's call, 19 Aug). Drafts expire on their own at `draftTtlHours`, so intake goes
+ * quiet by itself without anyone losing work. Also open: `/r/`, `/admin`, `/api/health`.
+ *
+ * A flag rather than deleted code, so it is reversible with one redeploy in either direction.
+ * ⚠️ Env changes do not reach existing deployments — flipping this requires a redeploy.
+ */
+export function intakeClosed(): boolean {
+  const value = process.env.INTAKE_CLOSED?.trim().toLowerCase();
+  return value === "1" || value === "true";
+}
