@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { ApiError, StartRequest, StartResponse } from "@/lib/interview/contract";
 import { startInterview } from "@/lib/interview/session";
 import { startRequestSchema } from "@/lib/interview/validation";
+import { intakeClosed } from "@/lib/env";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { fieldErrors } from "@/lib/validation";
 
@@ -29,6 +30,21 @@ const START_WINDOW_MS = 5 * 60_000;
 // load is not abuse protection, it is an outage.
 
 export async function POST(request: Request) {
+  /*
+   * THE DOOR. Closed before anything else — before parsing, before the rate limiter, before any
+   * database or model call — so a stale tab left open on someone's phone cannot open a draft
+   * after the exercise has ended.
+   *
+   * `retryable: false` on purpose: the client retries a 503 and would sit there re-asking a
+   * question that now has a permanent answer. This is not a transient failure, it is the end.
+   *
+   * Only STARTING is closed. /api/interview/turn stays open so anyone already mid-conversation
+   * finishes and gets their scorecard — see intakeClosed() in lib/env.ts.
+   */
+  if (intakeClosed()) {
+    return fail("This exercise has closed. If you already completed it, your scorecard link still works.", false, 403);
+  }
+
   let body: unknown;
   try {
     body = await request.json();

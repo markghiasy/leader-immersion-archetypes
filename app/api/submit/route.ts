@@ -3,6 +3,7 @@ import { createCompletion, knownEventSlugs, teamIdBySlug } from "@/lib/queries";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { score } from "@/lib/scoring";
 import { fieldErrors, submitSchema } from "@/lib/validation";
+import { intakeClosed } from "@/lib/env";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,17 @@ const SUBMIT_LIMIT = 120;
 const SUBMIT_WINDOW_MS = 5 * 60_000;
 
 export async function POST(request: Request) {
+  /*
+   * The legacy tap form writes straight to `responses`, so it is a second front door and has to
+   * be closed with the first one. Same shape as /api/interview/start.
+   */
+  if (intakeClosed()) {
+    return NextResponse.json(
+      { error: "This exercise has closed. If you already completed it, your scorecard link still works." },
+      { status: 403 },
+    );
+  }
+
   const limit = rateLimit(`submit:${clientIp(request.headers)}`, SUBMIT_LIMIT, SUBMIT_WINDOW_MS);
   if (!limit.ok) {
     return NextResponse.json(

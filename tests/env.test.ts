@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { assertProductionEnv, baseUrl, scorecardUrl } from "@/lib/env";
+import { assertProductionEnv, baseUrl, intakeClosed, scorecardUrl } from "@/lib/env";
 
 /**
  * The failure this guards against is silent: with BASE_URL unset, every permanent link
@@ -89,6 +89,38 @@ describe("assertProductionEnv", () => {
       const message = (error as Error).message;
       expect(message).toMatch(/BASE_URL is not set/);
       expect(message).toMatch(/DATABASE_URL is not set/);
+    }
+  });
+});
+
+/**
+ * The intake door. These assertions exist because the failure is asymmetric: a flag that fails
+ * to close leaves the exercise open after it has been declared shut, and a flag that closes when
+ * it should not takes the entry pages down for a live event.
+ */
+describe("intakeClosed", () => {
+  const original = process.env.INTAKE_CLOSED;
+  afterEach(() => {
+    if (original === undefined) delete process.env.INTAKE_CLOSED;
+    else process.env.INTAKE_CLOSED = original;
+  });
+
+  it("is OPEN by default — an unset variable must never close the door", () => {
+    delete process.env.INTAKE_CLOSED;
+    expect(intakeClosed()).toBe(false);
+  });
+
+  it("closes on 1 and on true, in any case, with stray whitespace", () => {
+    for (const value of ["1", "true", "TRUE", " True ", "true\n"]) {
+      process.env.INTAKE_CLOSED = value;
+      expect(intakeClosed(), `value ${JSON.stringify(value)}`).toBe(true);
+    }
+  });
+
+  it("stays OPEN for anything else — including the strings that look like a close", () => {
+    for (const value of ["", " ", "0", "false", "no", "yes", "closed", "INTAKE_CLOSED"]) {
+      process.env.INTAKE_CLOSED = value;
+      expect(intakeClosed(), `value ${JSON.stringify(value)}`).toBe(false);
     }
   });
 });
